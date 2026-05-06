@@ -1,26 +1,53 @@
 package com.proptech;
 
 import com.proptech.utilidades.estructuras.ListaEnlazada;
+import com.proptech.utilidades.estructuras.Pila;
+import com.proptech.utilidades.estructuras.Cola;
+import com.proptech.utilidades.estructuras.ColaPrioridad;
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println("=== Iniciando Pruebas de Lista Enlazada Propia ===");
+        System.out.println("=== Pruebas de Plataforma PropTech ===");
         
-        // Creamos una lista específicamente para textos (simulando un historial)
-        ListaEnlazada<String> historialFavoritos = new ListaEnlazada<>();
+        // 1. Prueba de Lista (Lo que ya hicimos)
+        ListaEnlazada<String> favoritos = new ListaEnlazada<>();
+        favoritos.agregar("Apto Norte");
+        System.out.println("Lista de Favoritos OK. Total: " + favoritos.getTamaño());
+
+        // 2. Prueba de Pila (Historial para Deshacer)
+        System.out.println("\n--- Historial de Edición de Precio (Pila) ---");
+        Pila<String> historialCambios = new Pila<>();
+        historialCambios.apilar("Precio inicial: $100M");
+        historialCambios.apilar("Cambio a: $105M");
+        historialCambios.apilar("Cambio a: $110M"); // Me equivoqué, quiero deshacer
         
-        // 1. Agregamos datos
-        historialFavoritos.agregar("Apartamento Norte (Cod: A001)");
-        historialFavoritos.agregar("Casa Centro (Cod: C045)");
-        historialFavoritos.agregar("Local Comercial Sur (Cod: L012)");
+        System.out.println("Deshaciendo última acción... Se eliminó: " + historialCambios.desapilar());
+        System.out.println("Precio actual tras deshacer: " + historialCambios.desapilar());
+
+        // 3. Prueba de Cola (Solicitudes de Visitas)
+        System.out.println("\n--- Solicitudes de Visitas (Cola) ---");
+        Cola<String> visitasPendientes = new Cola<>();
+        visitasPendientes.encolar("Cliente Juan - Visita Apto Norte");
+        visitasPendientes.encolar("Cliente Maria - Visita Casa Sur");
         
-        // 2. Verificamos el tamaño
-        System.out.println("Total de inmuebles favoritos: " + historialFavoritos.getTamaño());
+        System.out.println("Atendiendo solicitud: " + visitasPendientes.desencolar());
+        System.out.println("Atendiendo solicitud: " + visitasPendientes.desencolar());
+        System.out.println("¿Quedan visitas pendientes? " + (visitasPendientes.estaVacia() ? "No" : "Sí"));
+
+        // 4. Prueba de Cola de Prioridad (Visitas Urgentes)
+        System.out.println("\n--- Solicitudes de Visitas por Prioridad ---");
+        ColaPrioridad<String> visitasInteligentes = new ColaPrioridad<>();
         
-        // 3. Recorremos e imprimimos nuestra estructura
-        System.out.println("\nListado de favoritos:");
-        for (int i = 0; i < historialFavoritos.getTamaño(); i++) {
-            System.out.println((i + 1) + ". " + historialFavoritos.obtener(i));
-        }
+        // Encolamos con diferentes prioridades (1 es VIP/Urgente, 3 es Normal)
+        visitasInteligentes.encolar("Cliente Normal 1 - Casa Sur", 3);
+        visitasInteligentes.encolar("Cliente Normal 2 - Apto Este", 3);
+        visitasInteligentes.encolar("Cliente VIP (Inversor) - Edificio Centro", 1); // ¡Llegó al último pero es VIP!
+        visitasInteligentes.encolar("Cliente Urgente - Contrato por vencer", 2);
+
+        System.out.println("Atendiendo 1ro: " + visitasInteligentes.desencolar());
+        System.out.println("Atendiendo 2do: " + visitasInteligentes.desencolar());
+        System.out.println("Atendiendo 3ro: " + visitasInteligentes.desencolar());
+        System.out.println("Atendiendo 4to: " + visitasInteligentes.desencolar());
+        
     }
 }
