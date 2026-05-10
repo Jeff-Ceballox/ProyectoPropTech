@@ -1,10 +1,6 @@
 package com.proptech;
 
-import com.proptech.utilidades.estructuras.ListaEnlazada;
-import com.proptech.utilidades.estructuras.Pila;
-import com.proptech.utilidades.estructuras.Cola;
-import com.proptech.utilidades.estructuras.ColaPrioridad;
-import com.proptech.utilidades.estructuras.TablaHash;
+import com.proptech.utilidades.estructuras.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -65,6 +61,40 @@ public class Main {
         System.out.println("Buscando CC-1002: " + baseClientes.obtener("CC-1002"));
         System.out.println("Buscando CE-9005: " + baseClientes.obtener("CE-9005"));
         System.out.println("Buscando ID falso: " + baseClientes.obtener("CC-0000")); // Debería dar null
+
+        // 6. Prueba de Árbol (Ordenamiento automático)
+        System.out.println("\n--- Ordenamiento de Inmuebles por Precio (Árbol BST) ---");
+        // Clave: Double (Precio), Valor: String (Nombre)
+        ArbolBinarioBusqueda<Double, String> arbolPrecios = new ArbolBinarioBusqueda<>();
+        
+        arbolPrecios.insertar(250.5, "Casa Sur (250.5M)");
+        arbolPrecios.insertar(120.0, "Apto Centro (120.0M)");
+        arbolPrecios.insertar(300.0, "Penthouse Norte (300.0M)");
+        arbolPrecios.insertar(180.5, "Local Comercial (180.5M)");
+
+        // Al imprimir, debería mostrarlos de menor a mayor precio automáticamente
+        arbolPrecios.imprimirOrdenado();
            
+
+        // 7. Prueba de Grafo (Relaciones complejas)
+                System.out.println("\n--- Análisis de Relaciones Cliente-Inmueble (Grafo) ---");
+                Grafo<String> redInmobiliaria = new Grafo<>();
+                
+                // 1. Agregamos los "Nodos" (Clientes e Inmuebles)
+                redInmobiliaria.agregarVertice("Juan (Cliente)");
+                redInmobiliaria.agregarVertice("Maria (Cliente)");
+                redInmobiliaria.agregarVertice("Apto Norte (Inmueble)");
+                redInmobiliaria.agregarVertice("Casa Centro (Inmueble)");
+        
+                // 2. Creamos las "Conexiones" (Quien visitó qué)
+                // Juan visitó ambos
+                redInmobiliaria.agregarArista("Juan (Cliente)", "Apto Norte (Inmueble)");
+                redInmobiliaria.agregarArista("Juan (Cliente)", "Casa Centro (Inmueble)");
+                
+                // Maria solo visitó uno
+                redInmobiliaria.agregarArista("Maria (Cliente)", "Casa Centro (Inmueble)");
+        
+                // 3. Imprimimos el mapa para análisis
+                redInmobiliaria.imprimirRelaciones();
     }
 }
