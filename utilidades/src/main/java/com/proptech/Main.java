@@ -48,6 +48,6 @@ public class Main {
         System.out.println("Atendiendo 2do: " + visitasInteligentes.desencolar());
         System.out.println("Atendiendo 3ro: " + visitasInteligentes.desencolar());
         System.out.println("Atendiendo 4to: " + visitasInteligentes.desencolar());
-        
+           
     }
 }
