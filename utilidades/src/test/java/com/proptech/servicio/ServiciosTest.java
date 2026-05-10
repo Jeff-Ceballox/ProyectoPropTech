@@ -91,7 +91,7 @@ public class ServiciosTest {
         assertEquals("Disponible", local.getEstado(), "El estado debe haber regresado a Disponible");
     }
 
-
+ 
     @Test
     public void probarMotorRecomendaciones() {
         AnalisisRelacionesService motor = new AnalisisRelacionesService();
