@@ -13,7 +13,7 @@ public class Inmueble {
 
     public Inmueble(String codigo, String tipo, String direccion, double precio, double area) {
         this.codigo = codigo;
-        this.tipo = tipo;
+        this.tipo = tipo; 
         this.direccion = direccion;
         this.precio = precio;
         this.area = area;
