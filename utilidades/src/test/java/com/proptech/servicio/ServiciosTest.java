@@ -1,7 +1,8 @@
 package com.proptech.servicio;
 
-import com.proptech.modelo.Inmueble;
+import com.proptech.modelo.*;
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -10,25 +11,33 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ServiciosTest {
 
     @Test
-    public void probarInventarioInmuebles() {
-        InventarioInmueblesService inventario = new InventarioInmueblesService();
+    public void probarGestorVisitasPrioridad() {
+        GestorVisitasService gestor = new GestorVisitasService();
         
-        // 1. Creamos inmuebles usando nuestros "Moldes"
-        Inmueble i1 = new Inmueble("A-001", "Apartamento", "Norte", 250.0, 80.0);
-        Inmueble i2 = new Inmueble("C-045", "Casa", "Centro", 120.0, 150.0);
+        // 1. Preparamos los "actores" (Moldes) para la visita
+        Cliente clienteNormal = new Cliente("CC-111", "Juan", "555-0000", 150.0);
+        Cliente clienteVIP = new Cliente("NIT-999", "Empresa Inversora", "555-9999", 900.0);
+        Inmueble apto = new Inmueble("A-123", "Apartamento", "Norte", 200.0, 70.0);
+        Asesor asesor = new Asesor("ID-01", "Ana Asesora", "Ventas");
         
-        // 2. Los registramos en el servicio
-        inventario.registrarInmueble(i1);
-        inventario.registrarInmueble(i2);
+        // 2. Creamos las visitas
+        Visita vNormal = new Visita("V-001", clienteNormal, apto, asesor, "Mañana a las 10am");
+        Visita vUrgente = new Visita("V-002", clienteVIP, apto, asesor, "Hoy a las 4pm");
         
-        // 3. Verificamos que la Tabla Hash lo encuentre instantáneamente
-        Inmueble encontrado = inventario.buscarPorCodigo("C-045");
+        // 3. ¡ATENCIÓN A ESTO! Ingresamos la visita normal PRIMERO.
+        gestor.programarVisita(vNormal, 3); // Prioridad baja (3)
+        // Ingresamos la visita VIP SEGUNDA.
+        gestor.programarVisita(vUrgente, 1); // Prioridad alta (1)
         
-        assertNotNull(encontrado, "Debería encontrar el inmueble C-045");
-        assertEquals("Casa", encontrado.getTipo(), "El tipo debería ser 'Casa'");
-        assertEquals(120.0, encontrado.getPrecio(), "El precio debería coincidir");
+        // 4. Verificamos que la Cola de Prioridad haga su magia
+        Visita primeraAtendida = gestor.atenderProximaVisita();
         
-        // 4. Verificamos qué pasa si buscamos un código falso
-        assertNull(inventario.buscarPorCodigo("X-999"), "Debería retornar null para IDs falsos");
+        // La prueba exige que la primera en salir sea la V-002 (VIP), aunque llegó de última
+        assertNotNull(primeraAtendida, "Debería retornar una visita");
+        assertEquals("V-002", primeraAtendida.getIdVisita(), "La visita VIP debe saltarse la fila y salir primero");
+        assertEquals("Realizada", primeraAtendida.getEstado(), "El estado de la visita debe cambiar a 'Realizada'");
+        
+        // Queda 1 visita pendiente en la fila
+        assertEquals(1, gestor.obtenerTotalVisitasPendientes(), "Debería quedar 1 visita en espera");
     }
 }
