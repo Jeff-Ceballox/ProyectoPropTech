@@ -3,46 +3,63 @@ package com.proptech.servicio;
 import com.proptech.modelo.Inmueble;
 import com.proptech.utilidades.estructuras.TablaHash;
 import com.proptech.utilidades.estructuras.ArbolBinarioBusqueda;
+import com.proptech.utilidades.estructuras.ListaEnlazada;
+import com.proptech.dao.InmuebleDAO;
 
 /**
- * Servicio encargado de gestionar toda la lógica relacionada con los inmuebles.
- * Utiliza estructuras de datos avanzadas para garantizar alta eficiencia.
+ * Servicio encargado de gestionar los inmuebles.
+ * Ahora sincronizado con la base de datos SQL para persistencia permanente.
  */
 public class InventarioInmueblesService {
     
-    // 1. Tabla Hash para búsquedas instantáneas por código (Ej: "A-001")
     private TablaHash<String, Inmueble> mapaInmuebles;
-    
-    // 2. Árbol BST para mantener los inmuebles siempre ordenados por precio
     private ArbolBinarioBusqueda<Double, Inmueble> arbolPorPrecio;
+    
+    // Nuestro puente de conexión a la base de datos
+    private InmuebleDAO inmuebleDAO; 
 
     public InventarioInmueblesService() {
-        // Inicializamos la tabla hash con una capacidad base de 100 "cajas"
         this.mapaInmuebles = new TablaHash<>(100);
         this.arbolPorPrecio = new ArbolBinarioBusqueda<>();
+        this.inmuebleDAO = new InmuebleDAO();
+
+        // Al iniciar el servicio, cargamos todo el disco duro a la memoria RAM
+        cargarDatosDesdeSQL(); 
     }
 
     /**
-     * Registra un nuevo inmueble en el sistema en todas las estructuras necesarias.
+     * Extrae los datos de SQLite y alimenta nuestras estructuras genéricas.
+     */
+    private void cargarDatosDesdeSQL() {
+        ListaEnlazada<Inmueble> guardados = inmuebleDAO.obtenerTodos();
+        
+        for (int i = 0; i < guardados.getTamaño(); i++) {
+            Inmueble obj = guardados.obtener(i);
+            
+            // Llenamos nuestras estructuras ultrarrápidas
+            mapaInmuebles.insertar(obj.getCodigo(), obj);
+            arbolPorPrecio.insertar(obj.getPrecio(), obj);
+        }
+        System.out.println("Sincronización completada: " + guardados.getTamaño() + " inmuebles cargados en memoria RAM.");
+    }
+
+    /**
+     * Registra un nuevo inmueble tanto en la DB permanente como en la memoria caché (Estructuras).
      */
     public void registrarInmueble(Inmueble inmueble) {
-        // 1. Lo guardamos en la Tabla Hash para encontrarlo rápido luego
-        mapaInmuebles.insertar(inmueble.getCodigo(), inmueble);
+        // 1. Lo guardamos permanentemente en el archivo SQLite
+        inmuebleDAO.guardar(inmueble);
         
-        // 2. Lo guardamos en el Árbol para los reportes financieros
+        // 2. Lo guardamos en las estructuras para no tener que consultar SQL cada vez que busquemos
+        mapaInmuebles.insertar(inmueble.getCodigo(), inmueble);
         arbolPorPrecio.insertar(inmueble.getPrecio(), inmueble);
     }
 
-    /**
-     * Busca un inmueble en tiempo récord (O(1)) usando su código.
-     */
     public Inmueble buscarPorCodigo(String codigo) {
+        // La búsqueda sigue siendo instantánea porque lee de la RAM, no del disco duro
         return mapaInmuebles.obtener(codigo);
     }
 
-    /**
-     * Imprime el catálogo de inmuebles desde el más barato al más costoso.
-     */
     public void imprimirReportePorPrecio() {
         System.out.println("\n--- Catálogo de Inmuebles (Ordenado por Precio) ---");
         arbolPorPrecio.imprimirOrdenado();
