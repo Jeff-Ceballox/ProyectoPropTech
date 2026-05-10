@@ -25,10 +25,12 @@ public class Main {
             inventarioService.registrarInmueble(new Inmueble("WEB-002", "Casa", "Zona Sur", 150.0, 90.0));
         }
 
+        // --- DEFINICIÓN DE RUTAS (ENDPOINTS) ---
         // 3. Encendemos el Servidor Web Javalin
         Javalin app = Javalin.create(config -> {
             
-            // ¡NUEVA LÍNEA! Le decimos que comparta la carpeta public en internet
+            // Registramos la carpeta de archivos estáticos (HTML, JS, CSS)
+            // IMPORTANTE: Javalin buscará dentro de src/main/resources/public
             config.staticFiles.add("/public"); 
             
             config.bundledPlugins.enableCors(cors -> {
@@ -36,21 +38,15 @@ public class Main {
             });
         }).start(7070);
 
-        // --- DEFINICIÓN DE RUTAS (ENDPOINTS) ---
+        // --- DEFINICIÓN DE RUTAS API ---
+        // Borramos la ruta app.get("/", ...) que causaba el conflicto
 
-        // Ruta de prueba para saber si el servidor está vivo
-        app.get("/", ctx -> ctx.result("¡Bienvenido a la API de PropTech!"));
-
-        // Ruta para obtener todos los inmuebles
         app.get("/api/inmuebles", ctx -> {
-            // Nota técnica: Convertimos nuestra ListaEnlazada a una List estándar de Java
-            // SOLO para que el traductor JSON lo envíe correctamente al Frontend con formato de arreglo [...]
             ListaEnlazada<Inmueble> guardados = new com.proptech.dao.InmuebleDAO().obtenerTodos();
             List<Inmueble> listaParaWeb = new ArrayList<>();
             for (int i = 0; i < guardados.getTamaño(); i++) {
                 listaParaWeb.add(guardados.obtener(i));
             }
-            // Devolvemos los datos en formato JSON
             ctx.json(listaParaWeb);
         });
 
