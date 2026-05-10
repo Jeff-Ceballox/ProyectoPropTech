@@ -1,6 +1,8 @@
 package com.proptech.servicio;
 
 import com.proptech.modelo.*;
+import com.proptech.utilidades.estructuras.ListaEnlazada;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -87,6 +89,44 @@ public class ServiciosTest {
         assertTrue(exito, "Debería haber un cambio para deshacer");
         assertEquals(300.0, local.getPrecio(), "El precio debe haber regresado a 300.0 (LIFO)");
         assertEquals("Disponible", local.getEstado(), "El estado debe haber regresado a Disponible");
+    }
+
+
+    @Test
+    public void probarMotorRecomendaciones() {
+        AnalisisRelacionesService motor = new AnalisisRelacionesService();
+        
+        // 1. Creamos clientes e inmuebles simulados
+        Cliente juan = new Cliente("C-JUAN", "Juan", "111", 0);
+        Cliente maria = new Cliente("C-MARIA", "Maria", "222", 0);
+        
+        Inmueble aptoNorte = new Inmueble("A-NORTE", "Apto", "Norte", 0, 0);
+        Inmueble casaSur = new Inmueble("C-SUR", "Casa", "Sur", 0, 0);
+        Inmueble localCentro = new Inmueble("L-CENTRO", "Local", "Centro", 0, 0);
+
+        // 2. Simulamos el historial de visitas
+        // Juan visita el Apto Norte
+        motor.registrarInteres(juan, aptoNorte);
+        
+        // Maria visita el Apto Norte (tienen un gusto en común)
+        motor.registrarInteres(maria, aptoNorte);
+        // Y Maria también visita la Casa Sur
+        motor.registrarInteres(maria, casaSur);
+        // Y el Local Centro
+        motor.registrarInteres(maria, localCentro);
+
+        // 3. Le pedimos al sistema que recomiende algo para Juan
+        // Como a Juan le gustó el Apto Norte, y a Maria también... 
+        // el sistema debería recomendarle a Juan lo OTRO que vio Maria (Casa Sur y Local Centro)
+        ListaEnlazada<String> recomendacionesJuan = motor.obtenerRecomendaciones("C-JUAN");
+
+        // 4. Verificaciones
+        assertNotNull(recomendacionesJuan, "La lista de recomendaciones no debe ser nula");
+        assertEquals(2, recomendacionesJuan.getTamaño(), "Debería haber exactamente 2 recomendaciones para Juan");
+        
+        // Verificamos que contenga la Casa Sur (obtenemos el primer o segundo elemento, el orden puede variar)
+        boolean recomendadaCasaSur = recomendacionesJuan.obtener(0).equals("C-SUR") || recomendacionesJuan.obtener(1).equals("C-SUR");
+        assertTrue(recomendadaCasaSur, "El sistema debió recomendar la Casa Sur");
     }
 
 }
