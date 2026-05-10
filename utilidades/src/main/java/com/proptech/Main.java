@@ -27,7 +27,10 @@ public class Main {
 
         // 3. Encendemos el Servidor Web Javalin
         Javalin app = Javalin.create(config -> {
-            // Permitimos que cualquier página web se conecte a nuestra API (CORS)
+            
+            // ¡NUEVA LÍNEA! Le decimos que comparta la carpeta public en internet
+            config.staticFiles.add("/public"); 
+            
             config.bundledPlugins.enableCors(cors -> {
                 cors.addRule(it -> it.anyHost());
             });
