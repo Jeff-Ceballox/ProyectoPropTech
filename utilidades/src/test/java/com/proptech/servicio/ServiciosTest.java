@@ -11,6 +11,29 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ServiciosTest {
 
     @Test
+    public void probarInventarioInmuebles() {
+        InventarioInmueblesService inventario = new InventarioInmueblesService();
+        
+        // 1. Creamos inmuebles usando nuestros "Moldes"
+        Inmueble i1 = new Inmueble("A-001", "Apartamento", "Norte", 250.0, 80.0);
+        Inmueble i2 = new Inmueble("C-045", "Casa", "Centro", 120.0, 150.0);
+        
+        // 2. Los registramos en el servicio
+        inventario.registrarInmueble(i1);
+        inventario.registrarInmueble(i2);
+        
+        // 3. Verificamos que la Tabla Hash lo encuentre instantáneamente
+        Inmueble encontrado = inventario.buscarPorCodigo("C-045");
+        
+        assertNotNull(encontrado, "Debería encontrar el inmueble C-045");
+        assertEquals("Casa", encontrado.getTipo(), "El tipo debería ser 'Casa'");
+        assertEquals(120.0, encontrado.getPrecio(), "El precio debería coincidir");
+        
+        // 4. Verificamos qué pasa si buscamos un código falso
+        assertNull(inventario.buscarPorCodigo("X-999"), "Debería retornar null para IDs falsos");
+    }
+
+    @Test
     public void probarGestorVisitasPrioridad() {
         GestorVisitasService gestor = new GestorVisitasService();
         
@@ -40,4 +63,30 @@ public class ServiciosTest {
         // Queda 1 visita pendiente en la fila
         assertEquals(1, gestor.obtenerTotalVisitasPendientes(), "Debería quedar 1 visita en espera");
     }
+
+    @Test
+    public void probarHistorialDeshacerCambios() {
+        HistorialCambiosService historial = new HistorialCambiosService();
+        Inmueble local = new Inmueble("L-500", "Local", "Sur", 300.0, 120.0);
+        
+        // Verificamos el estado inicial
+        assertEquals(300.0, local.getPrecio(), "El precio inicial debe ser 300.0");
+        assertEquals("Disponible", local.getEstado(), "El estado inicial debe ser Disponible");
+        
+        // Hacemos un cambio: Alguien se equivoca y le pone 50.0 de precio (¡muy barato!) y lo marca Vendido
+        historial.actualizarInmueble(local, 50.0, "Vendido");
+        
+        // Verificamos que el cambio erróneo se aplicó
+        assertEquals(50.0, local.getPrecio(), "El precio cambió erróneamente a 50.0");
+        assertEquals("Vendido", local.getEstado(), "El estado cambió a Vendido");
+        
+        // ¡Oh no! Usamos nuestro botón de pánico (Deshacer)
+        boolean exito = historial.deshacerUltimoCambio();
+        
+        // Verificamos que la acción fue exitosa y los datos volvieron a la normalidad
+        assertTrue(exito, "Debería haber un cambio para deshacer");
+        assertEquals(300.0, local.getPrecio(), "El precio debe haber regresado a 300.0 (LIFO)");
+        assertEquals("Disponible", local.getEstado(), "El estado debe haber regresado a Disponible");
+    }
+
 }
