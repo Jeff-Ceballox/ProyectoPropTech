@@ -4,6 +4,7 @@ import com.proptech.utilidades.estructuras.ListaEnlazada;
 import com.proptech.utilidades.estructuras.Pila;
 import com.proptech.utilidades.estructuras.Cola;
 import com.proptech.utilidades.estructuras.ColaPrioridad;
+import com.proptech.utilidades.estructuras.TablaHash;
 
 public class Main {
     public static void main(String[] args) {
@@ -48,6 +49,22 @@ public class Main {
         System.out.println("Atendiendo 2do: " + visitasInteligentes.desencolar());
         System.out.println("Atendiendo 3ro: " + visitasInteligentes.desencolar());
         System.out.println("Atendiendo 4to: " + visitasInteligentes.desencolar());
+
+        // 5. Prueba de Tabla Hash (Búsqueda ultrarrápida)
+        System.out.println("\n--- Base de Datos en Memoria (Tabla Hash) ---");
+        
+        // Creamos una tabla que recibe Strings como clave (Cédula) y Strings como valor (Datos)
+        // Le damos una capacidad inicial de 10 "cajas"
+        TablaHash<String, String> baseClientes = new TablaHash<>(10);
+        
+        // Insertamos clientes (Clave, Valor)
+        baseClientes.insertar("CC-1001", "Juan Perez - Presupuesto: $150M");
+        baseClientes.insertar("CC-1002", "Maria Gomez - Presupuesto: $200M");
+        baseClientes.insertar("CE-9005", "Empresa XYZ - Presupuesto: $800M");
+
+        System.out.println("Buscando CC-1002: " + baseClientes.obtener("CC-1002"));
+        System.out.println("Buscando CE-9005: " + baseClientes.obtener("CE-9005"));
+        System.out.println("Buscando ID falso: " + baseClientes.obtener("CC-0000")); // Debería dar null
            
     }
 }
