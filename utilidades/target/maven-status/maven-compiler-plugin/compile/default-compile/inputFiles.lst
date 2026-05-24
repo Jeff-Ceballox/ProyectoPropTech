@@ -1,6 +1,9 @@
+C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\dao\AsesorDAO.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\dao\ClienteDAO.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\dao\ConexionDB.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\dao\InmuebleDAO.java
+C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\dao\OperacionDAO.java
+C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\dao\VisitaDAO.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\Main.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\modelo\Alerta.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\modelo\Asesor.java
@@ -11,10 +14,15 @@ C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\AlertasService.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\AnalisisRelacionesService.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\ClientesService.java
+C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\DetectorAnomaliesService.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\GestorVisitasService.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\HistorialCambiosService.java
+C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\HistorialYFavoritosService.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\InventarioInmueblesService.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\OperacionesService.java
+C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\RecomendacionService.java
+C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\ReporteService.java
+C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\VisitaService.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\utilidades\estructuras\ArbolBinarioBusqueda.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\utilidades\estructuras\Cola.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\utilidades\estructuras\ColaPrioridad.java

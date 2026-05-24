@@ -126,6 +126,23 @@ body {
     animation: fadeSlideUp 0.5s ease;
 }
 
+/* Border warnings for anomalies */
+.border-warning {
+    border-left: 4px solid #ffc107 !important;
+}
+
+/* Nav pills for reports */
+.nav-pills .nav-link {
+    color: #6c757d;
+    font-weight: 600;
+    border-radius: 50rem;
+    padding: 0.5rem 1.5rem;
+}
+.nav-pills .nav-link.active {
+    background: linear-gradient(135deg, #0f3460, #533483);
+    color: #fff;
+}
+
 /* Responsive tweaks */
 @media (max-width: 768px) {
     .hero-search h1 { font-size: 1.5rem; }

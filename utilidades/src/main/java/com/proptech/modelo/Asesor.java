@@ -33,6 +33,7 @@ public class Asesor {
     public void setEspecialidad(String especialidad) { this.especialidad = especialidad; }
 
     public int getNegociosCerrados() { return negociosCerrados; }
+    public void setNegociosCerrados(int negociosCerrados) { this.negociosCerrados = negociosCerrados; }
     
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }

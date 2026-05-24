@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // ---- NAVEGACIÓN ENTRE SECCIONES ----
 
 function mostrarSeccion(seccion) {
-    const secciones = ['inmuebles', 'clientes'];
+    const secciones = ['inmuebles', 'clientes', 'operaciones', 'reportes'];
     secciones.forEach(s => {
         document.getElementById('seccion-' + s).style.display = s === seccion ? 'block' : 'none';
         document.getElementById('buscador-' + s).style.display = s === seccion ? 'block' : 'none';
@@ -21,6 +21,8 @@ function mostrarSeccion(seccion) {
     // Cargar datos según la sección
     if (seccion === 'inmuebles') cargarInmuebles();
     if (seccion === 'clientes') cargarClientes();
+    if (seccion === 'operaciones') cargarOperaciones();
+    if (seccion === 'reportes') cargarReportes();
 }
 
 // ---- INMUEBLES ----
@@ -306,4 +308,318 @@ function registrarCliente() {
     .catch(err => {
         alert('Error al registrar cliente: ' + err.message);
     });
+}
+
+function buscarOperacionPorTipo() {
+    const tipo = document.getElementById('input-buscar-operacion').value.trim();
+    const resultDiv = document.getElementById('resultado-busqueda');
+    resultDiv.innerHTML = '<div class="text-white-50">Buscando...</div>';
+
+    fetch(`/api/operaciones/tipo/${encodeURIComponent(tipo)}`)
+        .then(res => {
+            if (!res.ok) throw new Error("No encontrado");
+            return res.json();
+        })
+        .then(operaciones => {
+            if (operaciones.length === 0) {
+                resultDiv.innerHTML = `<div class="result-card" style="border-color: rgba(233,69,96,0.5);"><span>❌ No se encontraron operaciones de tipo "${tipo}".</span></div>`;
+                return;
+            }
+            let html = `<div class="result-card"><h5 class="fw-bold mb-2">✅ ${operaciones.length} operaciones de tipo "${tipo}"</h5><hr><div class="row g-2">`;
+            operaciones.forEach(op => {
+                html += `<div class="col-md-4"><div class="border rounded p-2"><strong>${op.idOperacion}</strong><br><small>Monto: $${op.monto}M</small></div></div>`;
+            });
+            html += '</div></div>';
+            resultDiv.innerHTML = html;
+        })
+        .catch(() => {
+            resultDiv.innerHTML = `<div class="result-card" style="border-color: rgba(233,69,96,0.5);"><span>❌ Error al buscar operaciones.</span></div>`;
+        });
+}
+
+// ---- OPERACIONES ----
+
+function cargarOperaciones() {
+    fetch('/api/operaciones')
+        .then(res => {
+            if (!res.ok) throw new Error("Servidor rechazó la conexión");
+            return res.json();
+        })
+        .then(operaciones => {
+            const contenedor = document.getElementById('contenedor-operaciones');
+            contenedor.innerHTML = '';
+            document.getElementById('contador-operaciones').textContent = operaciones.length + ' operaciones';
+
+            if (operaciones.length === 0) {
+                contenedor.innerHTML = `
+                    <div class="col-12 text-center text-muted py-5">
+                        <h4>💼 No hay operaciones registradas aún</h4>
+                        <p>Usa el botón "Nueva Operación" para agregar la primera.</p>
+                    </div>`;
+                return;
+            }
+
+            operaciones.forEach((operacion, idx) => {
+                const colorTipo = operacion.tipo === 'Venta' ? '#e94560' : 
+                                  operacion.tipo === 'Arriendo' ? '#0f3460' : '#533483';
+                
+                const tarjeta = `
+                    <div class="col-md-4 fade-in" style="animation-delay: ${idx * 0.1}s">
+                        <div class="card card-proptech shadow-sm h-100">
+                            <div class="card-header-gradient text-white py-3 px-4">
+                                <h5 class="mb-1 fw-bold">${operacion.tipo}</h5>
+                                <small class="text-white-50">ID: ${operacion.idOperacion}</small>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge rounded-pill px-3 py-1" style="background: ${colorTipo}20; color: ${colorTipo};">
+                                        ${operacion.tipo}
+                                    </span>
+                                    <span class="price-tag mb-2">$${operacion.monto}M</span>
+                                </div>
+                                <hr class="my-3">
+                                <div class="d-flex flex-column gap-2 small">
+                                    <span>👤 Cliente: ${operacion.cliente ? operacion.cliente.nombre : operacion.idCliente}</span>
+                                    <span>🏠 Inmueble: ${operacion.inmueble ? operacion.inmueble.codigo : operacion.idInmueble}</span>
+                                    <span>💼 Asesor: ${operacion.asesor ? operacion.asesor.nombre : operacion.idAsesor}</span>
+                                    <span>📅 ${new Date(operacion.fecha).toLocaleDateString()}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                contenedor.innerHTML += tarjeta;
+            });
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            document.getElementById('contenedor-operaciones').innerHTML = `
+                <div class="alert alert-danger text-center w-100 shadow-sm rounded-4">
+                    <h5>❌ Error de conexión</h5>
+                    <p>No se pudo conectar con el servidor.</p>
+                </div>
+            `;
+        });
+}
+
+function abrirModalOperacion() {
+    new bootstrap.Modal(document.getElementById('modalOperacion')).show();
+}
+
+function registrarOperacion() {
+    const datos = {
+        idOperacion: document.getElementById('nueva-op-id').value.trim(),
+        tipo: document.getElementById('nueva-op-tipo').value,
+        idCliente: document.getElementById('nueva-op-cliente').value.trim(),
+        idInmueble: document.getElementById('nueva-op-inmueble').value.trim(),
+        idAsesor: document.getElementById('nueva-op-asesor').value.trim(),
+        monto: parseFloat(document.getElementById('nueva-op-monto').value) || 0
+    };
+
+    if (!datos.idOperacion || !datos.idCliente || !datos.idInmueble) {
+        alert('ID, cliente e inmueble son obligatorios.');
+        return;
+    }
+
+    fetch('/api/operaciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos)
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Error al registrar');
+        return res.json();
+    })
+    .then(operacion => {
+        bootstrap.Modal.getInstance(document.getElementById('modalOperacion')).hide();
+        ['nueva-op-id','nueva-op-cliente','nueva-op-inmueble','nueva-op-asesor','nueva-op-monto']
+            .forEach(id => document.getElementById(id).value = '');
+        cargarOperaciones();
+    })
+    .catch(err => {
+        alert('Error al registrar operación: ' + err.message);
+    });
+}
+
+// ---- REPORTES ----
+
+function cargarReportes() {
+    mostrarReporte('rendimiento');
+}
+
+function mostrarReporte(tipo) {
+    // Actualizar tabs
+    if (event && event.target) {
+        document.querySelectorAll('#report-tabs .nav-link').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+    }
+
+    const contenedor = document.getElementById('contenedor-reportes');
+    contenedor.innerHTML = '<div class="text-center text-muted"><div class="spinner-border text-primary mb-2"></div><p>Cargando...</p></div>';
+
+    switch(tipo) {
+        case 'rendimiento':
+            fetch('/api/reportes/rendimiento-inmuebles')
+                .then(res => res.json())
+                .then(data => {
+                    contenedor.innerHTML = `
+                        <div class="row g-4">
+                            <div class="col-md-3">
+                                <div class="card card-proptech p-3 text-center">
+                                    <h6 class="text-muted">Total Inmuebles</h6>
+                                    <h3 class="fw-bold text-primary">${data.totalInmuebles}</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-proptech p-3 text-center">
+                                    <h6 class="text-muted">Total Visitas</h6>
+                                    <h3 class="fw-bold text-info">${data.totalVisitas}</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-proptech p-3 text-center">
+                                    <h6 class="text-muted">Operaciones</h6>
+                                    <h3 class="fw-bold text-success">${data.totalOperaciones}</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card card-proptech p-3 text-center">
+                                    <h6 class="text-muted">Tasa Conversión</h6>
+                                    <h3 class="fw-bold" style="background: linear-gradient(135deg, #0f3460, #533483); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${data.tasaConversion}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            break;
+        
+        case 'asesores':
+            fetch('/api/reportes/asesores')
+                .then(res => res.json())
+                .then(data => {
+                    let html = '<div class="row g-3">';
+                    data.forEach(a => {
+                        html += `
+                            <div class="col-md-4">
+                                <div class="card card-proptech p-3">
+                                    <h5 class="fw-bold mb-2">${a.asesor || a.nombre}</h5>
+                                    <span class="badge bg-primary rounded-pill mb-2">${a.idAsesor || 'N/A'}</span>
+                                    <p class="mb-1"><strong>Operaciones:</strong> ${a.operacionesCerradas}</p>
+                                    <p class="mb-0 fw-bold">${a.totalVentas}</p>
+                                    <small class="text-muted">Calificación: ${a.calificacion || 'N/A'}</small>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    contenedor.innerHTML = html;
+                });
+            break;
+        
+        case 'precios':
+            fetch('/api/reportes/precios-zona')
+                .then(res => res.json())
+                .then(data => {
+                    let html = '<div class="row g-3">';
+                    for (const [zona, precio] of Object.entries(data)) {
+                        html += `
+                            <div class="col-md-4">
+                                <div class="card card-proptech p-3 text-center">
+                                    <h5 class="fw-bold mb-2">${zona}</h5>
+                                    <span class="price-tag mb-2">$${precio.toFixed(2)}M</span>
+                                    <small class="text-muted">Precio promedio</small>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    html += '</div>';
+                    contenedor.innerHTML = html;
+                });
+            break;
+        
+        case 'clientes':
+            fetch('/api/reportes/clientes-activos')
+                .then(res => res.json())
+                .then(data => {
+                    contenedor.innerHTML = `
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <div class="card card-proptech p-3 text-center">
+                                    <h6 class="text-muted">Total Clientes</h6>
+                                    <h3 class="fw-bold text-primary">${data.totalClientes}</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card card-proptech p-3 text-center">
+                                    <h6 class="text-muted">Con Visitas</h6>
+                                    <h3 class="fw-bold text-info">${data.clientesConVisitas}</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card card-proptech p-3 text-center">
+                                    <h6 class="text-muted">Con Operaciones</h6>
+                                    <h3 class="fw-bold text-success">${data.clientesConOperaciones}</h3>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-center">
+                            <span class="badge bg-primary fs-6 px-4 py-2 rounded-pill">Tasa de Actividad: ${data.tasaActividad}</span>
+                        </div>
+                    `;
+                });
+            break;
+        
+        case 'anomalias':
+            Promise.all([
+                fetch('/api/anomalias/total').then(r => r.json()),
+                fetch('/api/anomalias/visitas-sin-cierre').then(r => r.json()),
+                fetch('/api/anomalias/sobrecarga-asesores').then(r => r.json())
+            ]).then(([total, visitas, sobrecarga]) => {
+                let html = `
+                    <div class="alert alert-warning text-center mb-4">
+                        <h4 class="fw-bold">⚠️ Total Anomalías Detectadas: ${total.totalAnomalias}</h4>
+                    </div>
+                    <h5 class="fw-bold mb-3">Visitas sin Cierre</h5>
+                    <div class="row g-3 mb-4">
+                `;
+                if (visitas.length === 0) {
+                    html += '<p class="text-muted">No se detectaron visitas sin cierre</p>';
+                } else {
+                    visitas.forEach(a => {
+                        html += `
+                            <div class="col-md-6">
+                                <div class="card card-proptech p-3 border-warning">
+                                    <p class="mb-1"><strong>${a.cliente}</strong></p>
+                                    <small class="text-muted">${a.mensaje}</small>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                html += `
+                    </div>
+                    <h5 class="fw-bold mb-3">Sobrecarga de Asesores</h5>
+                    <div class="row g-3">
+                `;
+                if (sobrecarga.length === 0) {
+                    html += '<p class="text-muted">No se detectó sobrecarga de asesores</p>';
+                } else {
+                    sobrecarga.forEach(a => {
+                        html += `
+                            <div class="col-md-6">
+                                <div class="card card-proptech p-3 border-warning">
+                                    <p class="mb-1"><strong>${a.asesor}</strong></p>
+                                    <small class="text-muted">${a.mensaje}</small>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                html += '</div>';
+                contenedor.innerHTML = html;
+            });
+            break;
+    }
 }

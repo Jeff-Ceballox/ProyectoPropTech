@@ -1,26 +1,36 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PropTech - Plataforma Inmobiliaria</title>
-    <meta name="description" content="PropTech Analytics - Plataforma de gestión inmobiliaria con búsqueda ultrarrápida">
+    <meta name="description"
+        content="PropTech Analytics - Plataforma de gestión inmobiliaria con búsqueda ultrarrápida">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
     <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm py-3" style="background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);">
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm py-3"
+        style="background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);">
         <div class="container">
-            <a class="navbar-brand fw-bold fs-4" href="#">🏢 PropTech Analytics</a>
+            <a class="navbar-brand fw-bold fs-4" href="#">Inmobiliaria 3214</a>
             <div class="ms-auto d-flex align-items-center gap-3">
                 <button class="btn btn-nav active" onclick="mostrarSeccion('inmuebles')" id="btn-nav-inmuebles">
                     🏠 Inmuebles
                 </button>
                 <button class="btn btn-nav" onclick="mostrarSeccion('clientes')" id="btn-nav-clientes">
                     👥 Clientes
+                </button>
+                <button class="btn btn-nav" onclick="mostrarSeccion('operaciones')" id="btn-nav-operaciones">
+                    💼 Operaciones
+                </button>
+                <button class="btn btn-nav" onclick="mostrarSeccion('reportes')" id="btn-nav-reportes">
+                    📊 Reportes
                 </button>
             </div>
         </div>
@@ -30,15 +40,15 @@
     <div class="hero-search py-5" style="background: linear-gradient(135deg, #0f3460, #533483);">
         <div class="container">
             <h1 class="text-white fw-800 mb-2" style="font-size: 2.2rem;">Búsqueda Inteligente</h1>
-            <p class="text-white-50 mb-4">Búsquedas en O(1) impulsadas por Tablas Hash — sin tocar disco.</p>
+            <p class="text-white-50 mb-4">Inmuebles</p>
 
             <!-- Buscador de Inmuebles -->
             <div id="buscador-inmuebles" class="search-box">
                 <div class="input-group input-group-lg shadow-lg rounded-pill overflow-hidden">
                     <span class="input-group-text bg-white border-0 ps-4">🔍</span>
                     <input type="text" class="form-control border-0" id="input-buscar-inmueble"
-                           placeholder="Buscar inmueble por código (ej: WEB-001)..."
-                           onkeydown="if(event.key==='Enter') buscarInmueblePorCodigo()">
+                        placeholder="Buscar inmueble por código"
+                        onkeydown="if(event.key==='Enter') buscarInmueblePorCodigo()">
                     <button class="btn btn-warning fw-bold px-4" onclick="buscarInmueblePorCodigo()">
                         Buscar
                     </button>
@@ -50,12 +60,29 @@
                 <div class="input-group input-group-lg shadow-lg rounded-pill overflow-hidden">
                     <span class="input-group-text bg-white border-0 ps-4">🔍</span>
                     <input type="text" class="form-control border-0" id="input-buscar-cliente"
-                           placeholder="Buscar cliente por identificación (ej: CC-1001)..."
-                           onkeydown="if(event.key==='Enter') buscarClientePorId()">
+                        placeholder="Buscar cliente por identificación "
+                        onkeydown="if(event.key==='Enter') buscarClientePorId()">
                     <button class="btn btn-warning fw-bold px-4" onclick="buscarClientePorId()">
                         Buscar
                     </button>
                 </div>
+            </div>
+
+            <!-- Buscador de Operaciones -->
+            <div id="buscador-operaciones" class="search-box" style="display:none;">
+                <div class="input-group input-group-lg shadow-lg rounded-pill overflow-hidden">
+                    <span class="input-group-text bg-white border-0 ps-4">🔍</span>
+                    <input type="text" class="form-control border-0" id="input-buscar-operacion"
+                        placeholder="Buscar operación por tipo (Venta/Arriendo)..."
+                        onkeydown="if(event.key==='Enter') buscarOperacionPorTipo()">
+                    <button class="btn btn-warning fw-bold px-4" onclick="buscarOperacionPorTipo()">
+                        Buscar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Buscador de Reportes -->
+            <div id="buscador-reportes" class="search-box" style="display:none;">
             </div>
 
             <!-- Resultado de búsqueda -->
@@ -104,41 +131,105 @@
                 </div>
             </div>
         </div>
+
+        <!-- SECCIÓN OPERACIONES -->
+        <div id="seccion-operaciones" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <span style="color: #e94560;">Gestión</span> de Operaciones
+                </h2>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill"
+                        id="contador-operaciones">Cargando...</span>
+                    <button class="btn btn-success rounded-pill fw-bold px-4 shadow-sm" onclick="abrirModalOperacion()">
+                        ➕ Nueva Operación
+                    </button>
+                </div>
+            </div>
+
+            <div id="contenedor-operaciones" class="row g-4">
+                <div class="col-12 text-center text-muted">
+                    <div class="spinner-border text-primary mb-2" role="status"></div>
+                    <p>Cargando operaciones...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN REPORTES -->
+        <div id="seccion-reportes" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <span style="color: #0f3460;">Reportes</span> y Análisis
+                </h2>
+                <button class="btn btn-primary rounded-pill fw-bold px-4 shadow-sm" onclick="cargarReportes()">
+                    🔄 Actualizar Reportes
+                </button>
+            </div>
+
+            <!-- Tabs -->
+            <ul class="nav nav-pills mb-4" id="report-tabs">
+                <li class="nav-item"><button class="nav-link active"
+                        onclick="mostrarReporte('rendimiento')">Rendimiento</button></li>
+                <li class="nav-item"><button class="nav-link" onclick="mostrarReporte('asesores')">Asesores</button>
+                </li>
+                <li class="nav-item"><button class="nav-link" onclick="mostrarReporte('precios')">Precios por
+                        Zona</button></li>
+                <li class="nav-item"><button class="nav-link" onclick="mostrarReporte('clientes')">Clientes</button>
+                </li>
+                <li class="nav-item"><button class="nav-link" onclick="mostrarReporte('anomalias')">Anomalías</button>
+                </li>
+            </ul>
+
+            <div id="contenedor-reportes">
+                <div class="text-center text-muted">
+                    <div class="spinner-border text-primary mb-2" role="status"></div>
+                    <p>Cargando reportes...</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- MODAL: Registrar Cliente -->
     <div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">
-                <div class="modal-header border-0 pb-0" style="background: linear-gradient(135deg, #533483, #0f3460); border-radius: 1rem 1rem 0 0;">
+                <div class="modal-header border-0 pb-0"
+                    style="background: linear-gradient(135deg, #533483, #0f3460); border-radius: 1rem 1rem 0 0;">
                     <h5 class="modal-title text-white fw-bold">➕ Registrar Nuevo Cliente</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Identificación (Cédula/NIT)</label>
-                        <input type="text" class="form-control rounded-pill" id="nuevo-cliente-id" placeholder="Ej: CC-1234">
+                        <input type="text" class="form-control rounded-pill" id="nuevo-cliente-id"
+                            placeholder="Ej: CC-1234">
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nombre Completo</label>
-                        <input type="text" class="form-control rounded-pill" id="nuevo-cliente-nombre" placeholder="Ej: Juan Pérez">
+                        <input type="text" class="form-control rounded-pill" id="nuevo-cliente-nombre"
+                            placeholder="Ej: Juan Pérez">
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Teléfono</label>
-                        <input type="text" class="form-control rounded-pill" id="nuevo-cliente-telefono" placeholder="Ej: 310-555-1234">
+                        <input type="text" class="form-control rounded-pill" id="nuevo-cliente-telefono"
+                            placeholder="Ej: 310-555-1234">
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Email</label>
-                        <input type="email" class="form-control rounded-pill" id="nuevo-cliente-email" placeholder="Ej: juan@email.com">
+                        <input type="email" class="form-control rounded-pill" id="nuevo-cliente-email"
+                            placeholder="Ej: juan@email.com">
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Presupuesto Máximo ($M)</label>
-                        <input type="number" class="form-control rounded-pill" id="nuevo-cliente-presupuesto" placeholder="Ej: 350">
+                        <input type="number" class="form-control rounded-pill" id="nuevo-cliente-presupuesto"
+                            placeholder="Ej: 350">
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary rounded-pill fw-bold px-4" onclick="registrarCliente()">
+                    <button type="button" class="btn btn-secondary rounded-pill"
+                        data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary rounded-pill fw-bold px-4"
+                        onclick="registrarCliente()">
                         💾 Guardar Cliente
                     </button>
                 </div>
@@ -150,7 +241,8 @@
     <div class="modal fade" id="modalDetalleInmueble" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg rounded-4">
-                <div class="modal-header border-0" style="background: linear-gradient(135deg, #0f3460, #1a1a2e); border-radius: 1rem 1rem 0 0;">
+                <div class="modal-header border-0"
+                    style="background: linear-gradient(135deg, #0f3460, #1a1a2e); border-radius: 1rem 1rem 0 0;">
                     <h5 class="modal-title text-white fw-bold" id="detalle-inmueble-titulo">Detalle</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -160,7 +252,63 @@
         </div>
     </div>
 
+    <!-- MODAL: Registrar Operación -->
+    <div class="modal fade" id="modalOperacion" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0"
+                    style="background: linear-gradient(135deg, #e94560, #0f3460); border-radius: 1rem 1rem 0 0;">
+                    <h5 class="modal-title text-white fw-bold">➕ Registrar Nueva Operación</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">ID Operación</label>
+                        <input type="text" class="form-control rounded-pill" id="nueva-op-id" placeholder="Ej: OP-001">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tipo</label>
+                        <select class="form-select rounded-pill" id="nueva-op-tipo">
+                            <option value="Venta">Venta</option>
+                            <option value="Arriendo">Arriendo</option>
+                            <option value="Renovación">Renovación</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">ID Cliente</label>
+                        <input type="text" class="form-control rounded-pill" id="nueva-op-cliente"
+                            placeholder="Ej: CC-1001">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">ID Inmueble</label>
+                        <input type="text" class="form-control rounded-pill" id="nueva-op-inmueble"
+                            placeholder="Ej: WEB-001">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">ID Asesor</label>
+                        <input type="text" class="form-control rounded-pill" id="nueva-op-asesor"
+                            placeholder="Ej: ASE-001">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Monto ($)</label>
+                        <input type="number" class="form-control rounded-pill" id="nueva-op-monto"
+                            placeholder="Ej: 350">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary rounded-pill"
+                        data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary rounded-pill fw-bold px-4"
+                        onclick="registrarOperacion()">
+                        💾 Guardar Operación
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="app.js"></script>
 </body>
+
 </html>

@@ -64,4 +64,12 @@ public class InventarioInmueblesService {
         System.out.println("\n--- Catálogo de Inmuebles (Ordenado por Precio) ---");
         arbolPorPrecio.imprimirOrdenado();
     }
+
+    /**
+     * Obtiene todos los inmuebles del inventario.
+     * @return Lista de todos los inmuebles
+     */
+    public ListaEnlazada<Inmueble> obtenerTodos() {
+        return mapaInmuebles.valores();
+    }
 }

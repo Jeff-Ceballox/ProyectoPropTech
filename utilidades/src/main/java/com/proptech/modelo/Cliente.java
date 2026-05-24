@@ -13,6 +13,11 @@ public class Cliente {
     private String email;
     private ListaEnlazada<Inmueble> historialConsultas;
     private ListaEnlazada<Inmueble> favoritos;
+    
+    // Nuevos campos para el sistema de recomendación
+    private String tipoInmuebleDeseado; // Ej: "Apartamento", "Casa"
+    private String zonasInteres; // Ej: "Norte, Sur, Centro" o "Zona Norte, Zona Sur"
+    private int cantMinHabitaciones; // Cantidad mínima de habitaciones requerida
 
     /**
      * Constructor vacío requerido por Jackson (deserialización JSON).
@@ -20,6 +25,9 @@ public class Cliente {
     public Cliente() {
         this.historialConsultas = new ListaEnlazada<>();
         this.favoritos = new ListaEnlazada<>();
+        this.tipoInmuebleDeseado = "";
+        this.zonasInteres = "";
+        this.cantMinHabitaciones = 1;
     }
 
     public Cliente(String identificacion, String nombre, String telefono, double presupuestoMaximo, String email) {
@@ -30,6 +38,9 @@ public class Cliente {
         this.email = email;
         this.historialConsultas = new ListaEnlazada<>();
         this.favoritos = new ListaEnlazada<>();
+        this.tipoInmuebleDeseado = "";
+        this.zonasInteres = "";
+        this.cantMinHabitaciones = 1;
     }
 
     // --- Getters y Setters ---
@@ -59,6 +70,16 @@ public class Cliente {
     public void agregarFavorito(Inmueble inmueble) {
         this.favoritos.agregar(inmueble);
     }
+    
+    // Nuevos getters y setters para el sistema de recomendación
+    public String getTipoInmuebleDeseado() { return tipoInmuebleDeseado; }
+    public void setTipoInmuebleDeseado(String tipoInmuebleDeseado) { this.tipoInmuebleDeseado = tipoInmuebleDeseado; }
+    
+    public String getZonasInteres() { return zonasInteres; }
+    public void setZonasInteres(String zonasInteres) { this.zonasInteres = zonasInteres; }
+    
+    public int getCantMinHabitaciones() { return cantMinHabitaciones; }
+    public void setCantMinHabitaciones(int cantMinHabitaciones) { this.cantMinHabitaciones = cantMinHabitaciones; }
 
     @Override
     public String toString() {
