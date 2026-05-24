@@ -3,6 +3,8 @@ package com.proptech;
 import com.proptech.dao.ConexionDB;
 import com.proptech.modelo.Inmueble;
 import com.proptech.servicio.InventarioInmueblesService;
+import com.proptech.servicio.AlertasService;
+import com.proptech.modelo.Alerta;
 import com.proptech.utilidades.estructuras.ListaEnlazada;
 
 import io.javalin.Javalin;
@@ -24,6 +26,12 @@ public class Main {
             inventarioService.registrarInmueble(new Inmueble("WEB-001", "Penthouse", "Zona Norte", 500.0, 200.0, 4, 3, true, "Hermoso penthouse en zona norte"));
             inventarioService.registrarInmueble(new Inmueble("WEB-002", "Casa", "Zona Sur", 150.0, 90.0, 3, 2, false, "Casa acogedora en zona sur"));
         }
+
+        // 2.1 Iniciamos el servicio de alertas
+        AlertasService alertasService = new AlertasService();
+        alertasService.agregarAlerta(new Alerta("A-01", "Contrato a punto de vencer", 1, "2026-05-24"));
+        alertasService.agregarAlerta(new Alerta("A-02", "Mantenimiento rutinario programado", 5, "2026-05-24"));
+        alertasService.agregarAlerta(new Alerta("A-03", "Cliente VIP solicitó contacto", 2, "2026-05-24"));
 
         // --- DEFINICIÓN DE RUTAS (ENDPOINTS) ---
         // 3. Encendemos el Servidor Web Javalin
@@ -59,6 +67,16 @@ public class Main {
                 ctx.json(encontrado);
             } else {
                 ctx.status(404).result("Inmueble no encontrado");
+            }
+        });
+
+        // Ruta de prueba para Alertas
+        app.get("/api/alertas/siguiente", ctx -> {
+            if (alertasService.hayAlertasPendientes()) {
+                Alerta siguiente = alertasService.atenderSiguienteAlerta();
+                ctx.json(siguiente);
+            } else {
+                ctx.status(200).result("No hay alertas pendientes.");
             }
         });
 

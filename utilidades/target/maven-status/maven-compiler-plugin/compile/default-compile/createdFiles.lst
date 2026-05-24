@@ -1,6 +1,7 @@
 com\proptech\modelo\Inmueble.class
 com\proptech\servicio\OperacionesService.class
 com\proptech\utilidades\estructuras\NodoPrioridad.class
+com\proptech\modelo\Alerta.class
 com\proptech\dao\ConexionDB.class
 com\proptech\modelo\Cliente.class
 com\proptech\utilidades\estructuras\EntradaHash.class
@@ -9,6 +10,7 @@ com\proptech\servicio\AnalisisRelacionesService.class
 com\proptech\utilidades\estructuras\NodoArbol.class
 com\proptech\utilidades\estructuras\TablaHash.class
 com\proptech\modelo\Asesor.class
+com\proptech\servicio\AlertasService.class
 com\proptech\utilidades\estructuras\Vertice.class
 com\proptech\utilidades\estructuras\ColaPrioridad.class
 com\proptech\Main.class
