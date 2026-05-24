@@ -14,6 +14,14 @@ public class Cliente {
     private ListaEnlazada<Inmueble> historialConsultas;
     private ListaEnlazada<Inmueble> favoritos;
 
+    /**
+     * Constructor vacío requerido por Jackson (deserialización JSON).
+     */
+    public Cliente() {
+        this.historialConsultas = new ListaEnlazada<>();
+        this.favoritos = new ListaEnlazada<>();
+    }
+
     public Cliente(String identificacion, String nombre, String telefono, double presupuestoMaximo, String email) {
         this.identificacion = identificacion;
         this.nombre = nombre;

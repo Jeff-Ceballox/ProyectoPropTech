@@ -39,13 +39,21 @@ public class ConexionDB {
                 + "tieneParqueadero BOOLEAN, "
                 + "descripcion TEXT"
                 + ");";
+        String sqlClientes = "CREATE TABLE IF NOT EXISTS clientes ("
+                + "identificacion TEXT PRIMARY KEY, "
+                + "nombre TEXT NOT NULL, "
+                + "telefono TEXT, "
+                + "presupuestoMaximo REAL, "
+                + "email TEXT"
+                + ");";
 
         try (Connection conn = conectar(); 
              Statement stmt = conn.createStatement()) {
             
-            // Ejecutamos el comando SQL de creación
+            // Crear tablas
             stmt.execute(sqlInmuebles);
-            System.out.println("Base de datos sincronizada: Tabla 'inmuebles' lista.");
+            stmt.execute(sqlClientes);
+            System.out.println("Base de datos sincronizada: Tablas 'inmuebles' y 'clientes' listas.");
             
         } catch (SQLException e) {
             System.out.println("Error creando las tablas: " + e.getMessage());

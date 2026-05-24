@@ -76,5 +76,21 @@ public class TablaHash<K, V> {
         return null; // No existe esa clave
     }
 
+    /**
+     * Recorre TODOS los buckets de la tabla y devuelve una lista con todos los valores almacenados.
+     * Útil para listar todos los elementos (ej: GET /api/clientes).
+     */
+    public ListaEnlazada<V> valores() {
+        ListaEnlazada<V> resultado = new ListaEnlazada<>();
+        for (int i = 0; i < capacidad; i++) {
+            EntradaHash<K, V> actual = tabla[i];
+            while (actual != null) {
+                resultado.agregar(actual.getValor());
+                actual = actual.getSiguiente();
+            }
+        }
+        return resultado;
+    }
+
     public int getTamaño() { return tamaño; }
 }

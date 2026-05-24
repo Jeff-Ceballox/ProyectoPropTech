@@ -2,7 +2,9 @@ package com.proptech;
 
 import com.proptech.dao.ConexionDB;
 import com.proptech.modelo.Inmueble;
+import com.proptech.modelo.Cliente;
 import com.proptech.servicio.InventarioInmueblesService;
+import com.proptech.servicio.ClientesService;
 import com.proptech.servicio.AlertasService;
 import com.proptech.modelo.Alerta;
 import com.proptech.utilidades.estructuras.ListaEnlazada;
@@ -32,6 +34,16 @@ public class Main {
         alertasService.agregarAlerta(new Alerta("A-01", "Contrato a punto de vencer", 1, "2026-05-24"));
         alertasService.agregarAlerta(new Alerta("A-02", "Mantenimiento rutinario programado", 5, "2026-05-24"));
         alertasService.agregarAlerta(new Alerta("A-03", "Cliente VIP solicitó contacto", 2, "2026-05-24"));
+
+        // 2.2 Iniciamos el servicio de clientes (TablaHash para búsqueda O(1))
+        ClientesService clientesService = new ClientesService();
+
+        // Si no hay clientes, sembramos datos de prueba
+        if (clientesService.buscarPorIdentificacion("CC-1001") == null) {
+            clientesService.registrarCliente(new Cliente("CC-1001", "María García", "310-555-0101", 300.0, "maria.garcia@email.com"));
+            clientesService.registrarCliente(new Cliente("CC-1002", "Carlos Rodríguez", "320-555-0202", 450.0, "carlos.rod@email.com"));
+            clientesService.registrarCliente(new Cliente("NIT-9001", "Inversiones ABC S.A.S.", "601-555-0303", 1200.0, "contacto@inversionesabc.com"));
+        }
 
         // --- DEFINICIÓN DE RUTAS (ENDPOINTS) ---
         // 3. Encendemos el Servidor Web Javalin
@@ -78,6 +90,37 @@ public class Main {
             } else {
                 ctx.status(200).result("No hay alertas pendientes.");
             }
+        });
+
+        // --- RUTAS API DE CLIENTES ---
+
+        // Obtener todos los clientes (desde TablaHash en RAM)
+        app.get("/api/clientes", ctx -> {
+            ListaEnlazada<Cliente> clientes = clientesService.obtenerTodos();
+            List<Cliente> listaParaWeb = new ArrayList<>();
+            for (int i = 0; i < clientes.getTamaño(); i++) {
+                listaParaWeb.add(clientes.obtener(i));
+            }
+            ctx.json(listaParaWeb);
+        });
+
+        // Buscar cliente por identificación — O(1) vía TablaHash
+        app.get("/api/clientes/{id}", ctx -> {
+            String idBuscado = ctx.pathParam("id");
+            Cliente encontrado = clientesService.buscarPorIdentificacion(idBuscado);
+
+            if (encontrado != null) {
+                ctx.json(encontrado);
+            } else {
+                ctx.status(404).result("Cliente no encontrado con ID: " + idBuscado);
+            }
+        });
+
+        // Registrar un nuevo cliente (persiste en SQLite + indexa en TablaHash)
+        app.post("/api/clientes", ctx -> {
+            Cliente nuevo = ctx.bodyAsClass(Cliente.class);
+            clientesService.registrarCliente(nuevo);
+            ctx.status(201).json(nuevo);
         });
 
         System.out.println("Servidor corriendo en: http://localhost:7070");

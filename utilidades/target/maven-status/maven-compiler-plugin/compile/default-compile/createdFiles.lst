@@ -18,7 +18,9 @@ com\proptech\utilidades\estructuras\ArbolBinarioBusqueda.class
 com\proptech\utilidades\estructuras\Pila.class
 com\proptech\modelo\Operacion.class
 com\proptech\servicio\GestorVisitasService.class
+com\proptech\dao\ClienteDAO.class
 com\proptech\servicio\InventarioInmueblesService.class
+com\proptech\servicio\ClientesService.class
 com\proptech\servicio\HistorialCambiosService$RegistroCambio.class
 com\proptech\dao\InmuebleDAO.class
 com\proptech\utilidades\estructuras\ListaEnlazada.class

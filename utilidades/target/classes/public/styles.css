@@ -1,0 +1,133 @@
+/* === PropTech Analytics — Design System === */
+
+/* Font */
+* {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+    background-color: #f4f6fa;
+    min-height: 100vh;
+}
+
+/* Nav buttons */
+.btn-nav {
+    color: rgba(255,255,255,0.65);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 50rem;
+    padding: 0.4rem 1.2rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    background: transparent;
+}
+.btn-nav:hover,
+.btn-nav.active {
+    color: #fff;
+    background: rgba(255,255,255,0.15);
+    border-color: rgba(255,255,255,0.4);
+    transform: translateY(-1px);
+}
+
+/* Search hero */
+.hero-search {
+    position: relative;
+}
+.hero-search .input-group-text {
+    font-size: 1.2rem;
+}
+.hero-search .form-control:focus {
+    box-shadow: none;
+}
+
+/* Cards */
+.card-proptech {
+    border: none;
+    border-radius: 1.2rem;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background: #fff;
+}
+.card-proptech:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(15, 52, 96, 0.15);
+}
+
+.card-header-gradient {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    padding: 1.2rem 1.5rem;
+}
+
+.card-cliente {
+    border: none;
+    border-radius: 1.2rem;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background: #fff;
+}
+.card-cliente:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(83, 52, 131, 0.15);
+}
+
+.card-header-cliente {
+    background: linear-gradient(135deg, #533483, #0f3460);
+    padding: 1.2rem 1.5rem;
+}
+
+/* Price tag */
+.price-tag {
+    font-size: 1.6rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #0f3460, #533483);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Budget tag */
+.budget-tag {
+    font-size: 1.4rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #533483, #e94560);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Extras pills */
+.extra-pill {
+    background: #f0f2f5;
+    color: #333;
+    padding: 0.3rem 0.7rem;
+    border-radius: 50rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* Result highlight card */
+.result-card {
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 1rem;
+    padding: 1.2rem 1.5rem;
+    color: #fff;
+    animation: fadeSlideUp 0.4s ease;
+}
+
+/* Animations */
+@keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeSlideUp 0.5s ease;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+    .hero-search h1 { font-size: 1.5rem; }
+    .price-tag { font-size: 1.3rem; }
+}
