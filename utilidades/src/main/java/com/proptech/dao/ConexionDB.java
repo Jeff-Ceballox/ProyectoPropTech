@@ -33,7 +33,11 @@ public class ConexionDB {
                 + "direccion TEXT NOT NULL, "
                 + "precio REAL NOT NULL, "
                 + "area REAL NOT NULL, "
-                + "estado TEXT NOT NULL"
+                + "estado TEXT NOT NULL, "
+                + "habitaciones INTEGER, "
+                + "banos INTEGER, "
+                + "tieneParqueadero BOOLEAN, "
+                + "descripcion TEXT"
                 + ");";
 
         try (Connection conn = conectar(); 

@@ -10,13 +10,21 @@ public class Inmueble {
     private double precio;
     private double area;        // En metros cuadrados
     private String estado;      // Ej: "Disponible", "Vendido", "Arrendado"
+    private int habitaciones;
+    private int banos;
+    private boolean tieneParqueadero;
+    private String descripcion;
 
-    public Inmueble(String codigo, String tipo, String direccion, double precio, double area) {
+    public Inmueble(String codigo, String tipo, String direccion, double precio, double area, int habitaciones, int banos, boolean tieneParqueadero, String descripcion) {
         this.codigo = codigo;
         this.tipo = tipo; 
         this.direccion = direccion;
         this.precio = precio;
         this.area = area;
+        this.habitaciones = habitaciones;
+        this.banos = banos;
+        this.tieneParqueadero = tieneParqueadero;
+        this.descripcion = descripcion;
         this.estado = "Disponible"; // Por defecto, todo nuevo inmueble está disponible
     }
 
@@ -39,9 +47,21 @@ public class Inmueble {
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
 
+    public int getHabitaciones() { return habitaciones; }
+    public void setHabitaciones(int habitaciones) { this.habitaciones = habitaciones; }
+
+    public int getBanos() { return banos; }
+    public void setBanos(int banos) { this.banos = banos; }
+
+    public boolean isTieneParqueadero() { return tieneParqueadero; }
+    public void setTieneParqueadero(boolean tieneParqueadero) { this.tieneParqueadero = tieneParqueadero; }
+
+    public String getDescripcion() { return descripcion; }
+    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+
     // Método para imprimir el inmueble de forma legible
     @Override
     public String toString() {
-        return tipo + " en " + direccion + " | Precio: $" + precio + "M | Área: " + area + "m2 (" + estado + ")";
+        return tipo + " en " + direccion + " | Precio: $" + precio + "M | Área: " + area + "m2 | Hab: " + habitaciones + " | Baños: " + banos + " (" + estado + ")";
     }
 }

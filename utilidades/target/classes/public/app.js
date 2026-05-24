@@ -17,23 +17,34 @@ function cargarInmuebles() {
             inmuebles.forEach(inmueble => {
                 let colorEstado = inmueble.estado === 'Disponible' ? 'bg-success' : 'bg-secondary';
 
+                let extras = [];
+                if (inmueble.habitaciones > 0) extras.push(`🛏️ ${inmueble.habitaciones} Hab`);
+                if (inmueble.banos > 0) extras.push(`🛁 ${inmueble.banos} Baños`);
+                if (inmueble.tieneParqueadero) extras.push(`🚗 Parqueo`);
+                let descripcion = inmueble.descripcion ? inmueble.descripcion : "Propiedad exclusiva y moderna.";
+
                 // Construimos la tarjeta HTML
                 const tarjetaHTML = `
                     <div class="col-md-4">
-                        <div class="card h-100 shadow-sm border-0">
-                            <div class="card-header bg-primary text-white">
-                                <h5 class="card-title mb-0">${inmueble.tipo} en ${inmueble.direccion}</h5>
+                        <div class="card h-100 shadow-lg border-0 rounded-4 overflow-hidden" style="transition: transform 0.3s;">
+                            <div class="card-header bg-dark text-white py-3">
+                                <h5 class="card-title mb-0 fw-bold">${inmueble.tipo}</h5>
+                                <small class="text-light">📍 ${inmueble.direccion}</small>
                             </div>
-                            <div class="card-body">
-                                <p class="card-text text-muted">
-                                    <strong>Código:</strong> ${inmueble.codigo} <br>
-                                    <strong>Área:</strong> ${inmueble.area} m² <br>
-                                    <strong>Estado:</strong> <span class="badge ${colorEstado}">${inmueble.estado}</span>
-                                </p>
-                                <h3 class="text-primary fw-bold">$${inmueble.precio}M</h3>
+                            <div class="card-body bg-light">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="badge ${colorEstado} fs-6">${inmueble.estado}</span>
+                                    <span class="text-muted small">Cod: ${inmueble.codigo}</span>
+                                </div>
+                                <h2 class="text-primary fw-bold mb-3">$${inmueble.precio}M</h2>
+                                <p class="card-text text-muted small mb-3">${descripcion}</p>
+                                <div class="d-flex flex-wrap gap-2 text-secondary small fw-bold">
+                                    <span>📐 ${inmueble.area} m²</span>
+                                    ${extras.length > 0 ? ' | ' + extras.join(' | ') : ''}
+                                </div>
                             </div>
-                            <div class="card-footer bg-white border-0 pb-3 text-center">
-                                <button class="btn btn-outline-primary btn-sm w-100 fw-bold">Ver Detalles</button>
+                            <div class="card-footer bg-white border-0 p-3 text-center">
+                                <button class="btn btn-primary rounded-pill w-100 fw-bold shadow-sm">Ver Detalles</button>
                             </div>
                         </div>
                     </div>

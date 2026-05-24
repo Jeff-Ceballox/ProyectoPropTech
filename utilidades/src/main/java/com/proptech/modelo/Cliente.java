@@ -1,5 +1,7 @@
 package com.proptech.modelo;
 
+import com.proptech.utilidades.estructuras.ListaEnlazada;
+
 /**
  * Representa a un usuario que busca comprar o arrendar en la plataforma.
  */
@@ -8,12 +10,18 @@ public class Cliente {
     private String nombre;
     private String telefono;
     private double presupuestoMaximo;
+    private String email;
+    private ListaEnlazada<Inmueble> historialConsultas;
+    private ListaEnlazada<Inmueble> favoritos;
 
-    public Cliente(String identificacion, String nombre, String telefono, double presupuestoMaximo) {
+    public Cliente(String identificacion, String nombre, String telefono, double presupuestoMaximo, String email) {
         this.identificacion = identificacion;
         this.nombre = nombre;
         this.telefono = telefono;
         this.presupuestoMaximo = presupuestoMaximo;
+        this.email = email;
+        this.historialConsultas = new ListaEnlazada<>();
+        this.favoritos = new ListaEnlazada<>();
     }
 
     // --- Getters y Setters ---
@@ -29,8 +37,23 @@ public class Cliente {
     public double getPresupuestoMaximo() { return presupuestoMaximo; }
     public void setPresupuestoMaximo(double presupuestoMaximo) { this.presupuestoMaximo = presupuestoMaximo; }
 
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public ListaEnlazada<Inmueble> getHistorialConsultas() { return historialConsultas; }
+    
+    public void agregarConsulta(Inmueble inmueble) {
+        this.historialConsultas.agregar(inmueble);
+    }
+
+    public ListaEnlazada<Inmueble> getFavoritos() { return favoritos; }
+    
+    public void agregarFavorito(Inmueble inmueble) {
+        this.favoritos.agregar(inmueble);
+    }
+
     @Override
     public String toString() {
-        return nombre + " (ID: " + identificacion + ") | Presupuesto: $" + presupuestoMaximo + "M";
+        return nombre + " (ID: " + identificacion + ") | Correo: " + email + " | Presupuesto: $" + presupuestoMaximo + "M";
     }
 }

@@ -17,8 +17,8 @@ public class ServiciosTest {
         InventarioInmueblesService inventario = new InventarioInmueblesService();
         
         // 1. Creamos inmuebles usando nuestros "Moldes"
-        Inmueble i1 = new Inmueble("A-001", "Apartamento", "Norte", 250.0, 80.0);
-        Inmueble i2 = new Inmueble("C-045", "Casa", "Centro", 120.0, 150.0);
+        Inmueble i1 = new Inmueble("A-001", "Apartamento", "Norte", 250.0, 80.0, 3, 2, true, "Apto Norte");
+        Inmueble i2 = new Inmueble("C-045", "Casa", "Centro", 120.0, 150.0, 4, 3, true, "Casa Centro");
         
         // 2. Los registramos en el servicio
         inventario.registrarInmueble(i1);
@@ -40,10 +40,10 @@ public class ServiciosTest {
         GestorVisitasService gestor = new GestorVisitasService();
         
         // 1. Preparamos los "actores" (Moldes) para la visita
-        Cliente clienteNormal = new Cliente("CC-111", "Juan", "555-0000", 150.0);
-        Cliente clienteVIP = new Cliente("NIT-999", "Empresa Inversora", "555-9999", 900.0);
-        Inmueble apto = new Inmueble("A-123", "Apartamento", "Norte", 200.0, 70.0);
-        Asesor asesor = new Asesor("ID-01", "Ana Asesora", "Ventas");
+        Cliente clienteNormal = new Cliente("CC-111", "Juan", "555-0000", 150.0, "juan@test.com");
+        Cliente clienteVIP = new Cliente("NIT-999", "Empresa Inversora", "555-9999", 900.0, "vip@test.com");
+        Inmueble apto = new Inmueble("A-123", "Apartamento", "Norte", 200.0, 70.0, 2, 2, false, "Apto");
+        Asesor asesor = new Asesor("ID-01", "Ana Asesora", "Ventas", "ana@test.com", "123456");
         
         // 2. Creamos las visitas
         Visita vNormal = new Visita("V-001", clienteNormal, apto, asesor, "Mañana a las 10am");
@@ -69,7 +69,7 @@ public class ServiciosTest {
     @Test
     public void probarHistorialDeshacerCambios() {
         HistorialCambiosService historial = new HistorialCambiosService();
-        Inmueble local = new Inmueble("L-500", "Local", "Sur", 300.0, 120.0);
+        Inmueble local = new Inmueble("L-500", "Local", "Sur", 300.0, 120.0, 0, 1, false, "Local Sur");
         
         // Verificamos el estado inicial
         assertEquals(300.0, local.getPrecio(), "El precio inicial debe ser 300.0");
@@ -97,12 +97,12 @@ public class ServiciosTest {
         AnalisisRelacionesService motor = new AnalisisRelacionesService();
         
         // 1. Creamos clientes e inmuebles simulados
-        Cliente juan = new Cliente("C-JUAN", "Juan", "111", 0);
-        Cliente maria = new Cliente("C-MARIA", "Maria", "222", 0);
+        Cliente juan = new Cliente("C-JUAN", "Juan", "111", 0, "juan@test.com");
+        Cliente maria = new Cliente("C-MARIA", "Maria", "222", 0, "maria@test.com");
         
-        Inmueble aptoNorte = new Inmueble("A-NORTE", "Apto", "Norte", 0, 0);
-        Inmueble casaSur = new Inmueble("C-SUR", "Casa", "Sur", 0, 0);
-        Inmueble localCentro = new Inmueble("L-CENTRO", "Local", "Centro", 0, 0);
+        Inmueble aptoNorte = new Inmueble("A-NORTE", "Apto", "Norte", 0, 0, 2, 1, false, "Apto Norte");
+        Inmueble casaSur = new Inmueble("C-SUR", "Casa", "Sur", 0, 0, 3, 2, true, "Casa Sur");
+        Inmueble localCentro = new Inmueble("L-CENTRO", "Local", "Centro", 0, 0, 0, 1, false, "Local Centro");
 
         // 2. Simulamos el historial de visitas
         // Juan visita el Apto Norte

@@ -21,8 +21,8 @@ public class Main {
 
         // (Opcional) Si la base de datos está vacía, agregamos un inmueble de prueba
         if (inventarioService.buscarPorCodigo("WEB-001") == null) {
-            inventarioService.registrarInmueble(new Inmueble("WEB-001", "Penthouse", "Zona Norte", 500.0, 200.0));
-            inventarioService.registrarInmueble(new Inmueble("WEB-002", "Casa", "Zona Sur", 150.0, 90.0));
+            inventarioService.registrarInmueble(new Inmueble("WEB-001", "Penthouse", "Zona Norte", 500.0, 200.0, 4, 3, true, "Hermoso penthouse en zona norte"));
+            inventarioService.registrarInmueble(new Inmueble("WEB-002", "Casa", "Zona Sur", 150.0, 90.0, 3, 2, false, "Casa acogedora en zona sur"));
         }
 
         // --- DEFINICIÓN DE RUTAS (ENDPOINTS) ---

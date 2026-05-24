@@ -16,7 +16,7 @@ public class DatabaseTest {
         
         // 2. Creamos un inmueble de prueba (Usamos un ID aleatorio para que no choque si corremos el test varias veces)
         String idPrueba = "TEST-" + System.currentTimeMillis();
-        Inmueble i1 = new Inmueble(idPrueba, "Apartamento", "Prueba DB", 100.0, 50.0);
+        Inmueble i1 = new Inmueble(idPrueba, "Apartamento", "Prueba DB", 100.0, 50.0, 2, 1, false, "Desc");
         
         // 3. Lo guardamos en SQL
         dao.guardar(i1);

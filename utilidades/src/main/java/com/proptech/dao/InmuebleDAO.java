@@ -18,7 +18,7 @@ public class InmuebleDAO {
      * Guarda un nuevo inmueble en la tabla SQL.
      */
     public void guardar(Inmueble inmueble) {
-        String sql = "INSERT INTO inmuebles(codigo, tipo, direccion, precio, area, estado) VALUES(?,?,?,?,?,?)";
+        String sql = "INSERT INTO inmuebles(codigo, tipo, direccion, precio, area, estado, habitaciones, banos, tieneParqueadero, descripcion) VALUES(?,?,?,?,?,?,?,?,?,?)";
 
         try (Connection conn = ConexionDB.conectar();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -30,6 +30,10 @@ public class InmuebleDAO {
             pstmt.setDouble(4, inmueble.getPrecio());
             pstmt.setDouble(5, inmueble.getArea());
             pstmt.setString(6, inmueble.getEstado());
+            pstmt.setInt(7, inmueble.getHabitaciones());
+            pstmt.setInt(8, inmueble.getBanos());
+            pstmt.setBoolean(9, inmueble.isTieneParqueadero());
+            pstmt.setString(10, inmueble.getDescripcion());
             
             pstmt.executeUpdate();
             System.out.println("Inmueble " + inmueble.getCodigo() + " guardado permanentemente en DB.");
@@ -58,7 +62,11 @@ public class InmuebleDAO {
                         rs.getString("tipo"),
                         rs.getString("direccion"),
                         rs.getDouble("precio"),
-                        rs.getDouble("area")
+                        rs.getDouble("area"),
+                        rs.getInt("habitaciones"),
+                        rs.getInt("banos"),
+                        rs.getBoolean("tieneParqueadero"),
+                        rs.getString("descripcion")
                 );
                 obj.setEstado(rs.getString("estado"));
                 
