@@ -6,6 +6,10 @@ public class Usuario {
     private String passwordHash;
     private Rol rol;
     private String nombre;
+    private String telefono;
+    private String direccion;
+    private String intereses;
+    private String fotoPerfil;
     private boolean activo;
     
     public Usuario() {
@@ -35,6 +39,18 @@ public class Usuario {
     
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
+    
+    public String getTelefono() { return telefono; }
+    public void setTelefono(String telefono) { this.telefono = telefono; }
+    
+    public String getDireccion() { return direccion; }
+    public void setDireccion(String direccion) { this.direccion = direccion; }
+    
+    public String getIntereses() { return intereses; }
+    public void setIntereses(String intereses) { this.intereses = intereses; }
+    
+    public String getFotoPerfil() { return fotoPerfil; }
+    public void setFotoPerfil(String fotoPerfil) { this.fotoPerfil = fotoPerfil; }
     
     public boolean isActivo() { return activo; }
     public void setActivo(boolean activo) { this.activo = activo; }

@@ -83,7 +83,10 @@ public class Main {
         }).start(7070);
 
         // --- DEFINICIÓN DE RUTAS API ---
-        // Borramos la ruta app.get("/", ...) que causaba el conflicto
+        // Ruta raíz redirige a landing page
+        app.get("/", ctx -> {
+            ctx.redirect("/landing.html");
+        });
 
         app.get("/api/inmuebles", ctx -> {
             ListaEnlazada<Inmueble> guardados = new com.proptech.dao.InmuebleDAO().obtenerTodos();
@@ -342,11 +345,11 @@ public class Main {
                 return;
             }
             
-            Usuario usuario = authService.registrar(email, password, nombre);
-            if (usuario != null) {
-                ctx.json(Map.of("mensaje", "Usuario creado exitosamente", "email", usuario.getEmail()));
+            Map<String, Object> resultado = authService.registrarConRecomendaciones(email, password, nombre);
+            if ((Boolean)resultado.get("exito")) {
+                ctx.json(resultado);
             } else {
-                ctx.status(400).json(Map.of("error", "El email ya está registrado"));
+                ctx.status(400).json(Map.of("error", resultado.get("error")));
             }
         });
         
@@ -361,6 +364,45 @@ public class Main {
                 ctx.json(Map.of("mensaje", "Login exitoso", "rol", usuario.getRol().getNombre(), "nombre", usuario.getNombre()));
             } else {
                 ctx.status(401).json(Map.of("error", "Credenciales inválidas"));
+            }
+        });
+        
+        // Obtener perfil
+        app.get("/api/usuario/perfil", ctx -> {
+            String email = ctx.queryParam("email");
+            if (email == null) {
+                ctx.status(400).json(Map.of("error", "Email requerido"));
+                return;
+            }
+            Usuario usuario = authService.obtenerPerfil(email);
+            if (usuario != null) {
+                ctx.json(usuario);
+            } else {
+                ctx.status(404).json(Map.of("error", "Usuario no encontrado"));
+            }
+        });
+        
+        // Actualizar perfil
+        app.put("/api/usuario/actualizar", ctx -> {
+            Map<String, Object> datos = ctx.bodyAsClass(Map.class);
+            String email = (String) datos.get("email");
+            
+            Usuario usuario = authService.obtenerPerfil(email);
+            if (usuario == null) {
+                ctx.status(404).json(Map.of("error", "Usuario no encontrado"));
+                return;
+            }
+            
+            if (datos.containsKey("nombre")) usuario.setNombre((String) datos.get("nombre"));
+            if (datos.containsKey("telefono")) usuario.setTelefono((String) datos.get("telefono"));
+            if (datos.containsKey("direccion")) usuario.setDireccion((String) datos.get("direccion"));
+            if (datos.containsKey("intereses")) usuario.setIntereses((String) datos.get("intereses"));
+            if (datos.containsKey("fotoPerfil")) usuario.setFotoPerfil((String) datos.get("fotoPerfil"));
+            
+            if (authService.actualizarPerfil(usuario)) {
+                ctx.json(Map.of("mensaje", "Perfil actualizado"));
+            } else {
+                ctx.status(500).json(Map.of("error", "Error al actualizar"));
             }
         });
 

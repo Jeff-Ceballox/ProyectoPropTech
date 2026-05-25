@@ -185,11 +185,66 @@ Basado en el documento de requisitos proporcionado, identificar módulos faltant
 - [x] Registro público: siempre asignar rol_id = CLIENTE por defecto
 - [x] Implementar endpoints: POST /api/auth/registro, POST /api/auth/login
 
-### Posibles tareas futuras
-- [ ] Landing page moderna con tema PropTech
-  - Hero section con gradientes PropTech
-  - Sección de características/módulos
-  - Call-to-action para registro/login
-  - Responsive design
 
+#### Landing Page
+**Objetivo:** Captar leads y generar registros
+
+**Estructura propuesta:**
+- **Título:** "Encuentra tu propiedad ideal con PropTech"
+- **Subtítulo:** "La plataforma inteligente que conecta compradores y vendedores con recomendaciones personalizadas"
+- **Beneficios:**
+  1. Recomendaciones inteligentes basadas en tus preferencias
+  2. Historial y favoritos para comparar propiedades
+  3. Análisis de mercado en tiempo real por zona
+- **Prueba social:** "Más de 500 usuarios confían en PropTech"
+- **CTA:** "Regístrate gratis y recibe tus primeras 3 recomendaciones"
+
+**Tareas:**
+- [x] Crear landing.html con tema PropTech
+- [x] Hero section con gradientes PropTech y título persuasivo
+- [x] Sección de características del sistema
+- [x] Testimonios y prueba social
+- [x] Formulario de captura de leads
+- [x] Diseño responsive
+- [x] Variantes A/B de título para pruebas:
+  1. "Tu hogar ideal te está esperando - Descubre propiedades inteligentes"
+  2. "PropTech: La forma más inteligente de encontrar propiedades"
+  3. "Conecta con tu próximo hogar mediante tecnología predictiva"
+- [x] Testimonio simulado: "PropTech me encontró una casa en mi zona favorita justo dentro de mi presupuesto"
+- [x] Envío de 3 recomendaciones al registrarse
+- [x] Simulación de correo con recomendaciones
+- [x] Redirección de raíz "/" a landing.html en Main.java
+
+### Perfil de Usuario
+**Objetivo:** Gestión completa del perfil de usuario con foto y cierre de sesión
+
+**Tareas:**
+- [x] Ampliar Usuario.java con campos: telefono, direccion, intereses, fotoPerfil
+- [x] Actualizar UsuarioDAO.java con nuevos campos y método actualizar()
+- [x] Actualizar tabla usuarios en SQLite con nuevas columnas
+- [x] Agregar métodos en AuthService: obtenerPerfil(), actualizarPerfil()
+- [x] Crear perfil.html con tema PropTech
+- [x] Menú desplegable en header (arriba a la derecha)
+- [x] Endpoint GET /api/usuario/perfil
+- [x] Endpoint PUT /api/usuario/actualizar
+- [x] Subir foto de perfil (almacenamiento local)
+- [x] Editar nombre, teléfono, correo, dirección, intereses
+- [x] No permitir cambio de ID
+- [x] Opción "Cerrar sesión" que redirige a landing.html
+- [x] Persistir sesión en localStorage
+
+### Corrección de bugs y unificación de estilos
+**Objetivo:** Corregir errores y unificar la identidad visual
+
+**Tareas:**
+- [x] Corregir error al acceder a "Mi Perfil" desde menú (cierra sesión inesperadamente) - Se cambió a redirección directa a landing.html con localStorage.removeItem en onclick
+- [x] Unificar estilos landing.html con index.html (gradiente #1a1a2e → #16213e → #0f3460)
+- [x] Unificar estilos login.html con index.html
+- [x] Unificar estilos registro.html con index.html
+- [x] Agregar Sticky Header en landing.html con botones login/registro
+- [x] Agregar Ticker/Marquee con CSS Animations debajo del header con mensaje "Descubre el mejor inmueble para ti"
+- [x] Cambiar nombre frontend de "PropTech" a "Insignia Inmo" (ver docs para nombre del proyecto)
+
+## Nota sobre el nombre del proyecto
+**Insignia Inmo** es el nombre comercial del proyecto. El backend mantiene referencias a "PropTech" para compatibilidad técnica, pero la interfaz de usuario muestra "Insignia Inmo".
 *(Esta sección será actualizada conforme se identifiquen nuevas tareas)*

@@ -1,10 +1,17 @@
 // =============================================
-// PropTech Analytics — Frontend Application
+// Insignia Inmo — Frontend Application
 // =============================================
 
-document.addEventListener("DOMContentLoaded", () => {
+function initApp() {
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    if (usuario.nombre) {
+        const navNombre = document.getElementById('nombre-usuario-nav');
+        if (navNombre) navNombre.textContent = usuario.nombre.split(' ')[0];
+    }
     cargarInmuebles();
-});
+}
+
+document.addEventListener("DOMContentLoaded", initApp);
 
 // ---- NAVEGACIÓN ENTRE SECCIONES ----
 
@@ -672,7 +679,7 @@ function exportarReporte() {
     ventana.document.write(`
         <html>
         <head>
-            <title>Reporte PropTech</title>
+            <title>Reporte Insignia Inmo</title>
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
             <style>
                 body { font-family: 'Inter', sans-serif; padding: 20px; }
@@ -680,7 +687,7 @@ function exportarReporte() {
             </style>
         </head>
         <body>
-            <h1 class="fw-bold mb-4">Reporte PropTech - ${new Date().toLocaleDateString()}</h1>
+            <h1 class="fw-bold mb-4">Reporte Insignia Inmo - ${new Date().toLocaleDateString()}</h1>
             ${contenido}
         </body>
         </html>
@@ -713,7 +720,6 @@ function mostrarError(mensaje) {
 }
 
 function mostrarExito(mensaje) {
-    // Crear toast de éxito
     const toast = document.createElement('div');
     toast.className = 'position-fixed bottom-0 end-0 p-3';
     toast.style.zIndex = '1055';
@@ -730,3 +736,14 @@ function mostrarExito(mensaje) {
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 3000);
 }
+
+function initApp() {
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    if (usuario.nombre) {
+        const navNombre = document.getElementById('nombre-usuario-nav');
+        if (navNombre) navNombre.textContent = usuario.nombre.split(' ')[0];
+    }
+    cargarInmuebles();
+}
+
+document.addEventListener("DOMContentLoaded", initApp);
