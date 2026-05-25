@@ -3,6 +3,7 @@ C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\dao\ConexionDB.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\dao\InmuebleDAO.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\dao\OperacionDAO.java
+C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\dao\UsuarioDAO.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\dao\VisitaDAO.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\Main.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\modelo\Alerta.java
@@ -10,9 +11,12 @@ C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\modelo\Cliente.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\modelo\Inmueble.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\modelo\Operacion.java
+C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\modelo\Rol.java
+C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\modelo\Usuario.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\modelo\Visita.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\AlertasService.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\AnalisisRelacionesService.java
+C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\AuthService.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\ClientesService.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\DetectorAnomaliesService.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\GestorVisitasService.java
@@ -35,3 +39,4 @@ C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\utilidades\estructuras\Pila.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\utilidades\estructuras\TablaHash.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\utilidades\estructuras\Vertice.java
+C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\utilidades\HashUtils.java

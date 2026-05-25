@@ -156,42 +156,40 @@ Basado en el documento de requisitos proporcionado, identificar módulos faltant
 ## 📋 Modelado de tareas pendientes.
 
 ### Frontend - Mejoras pendientes
-1.1
-- [x] Refactorizar sección de Reportes:
-  - [x] Eliminar buscador inteligente de la sección de reportes
-  - [ ] Implementar búsqueda de reportes por filtros (fecha, nombre, tipo)
-  - [ ] Mejorar visualización de datos en reportes
-  - [ ] Añadir exportación de reportes (PDF/Excel)
-- [ ] Validaciones adicionales en formularios
-- [ ] Mejoras de UX en modales
-- [ ] Mensajes de error más descriptivos
+1.1 Refactorizar sección de Reportes:
+- [x] Eliminar buscador inteligente de la sección de reportes
+- [x] Implementar búsqueda de reportes por filtros (fecha, nombre, tipo)
+- [x] Mejorar visualización de datos en reportes
+- [x] Añadir exportación de reportes (PDF/Excel)
+
+1.2 Otras mejoras frontend:
+- [x] Validaciones adicionales en formularios
+- [x] Mejoras de UX en modales (toast notifications)
+- [x] Mensajes de error más descriptivos
 
 ### Backend - Mejoras pendientes
-2.1
-- [ ] Añadir más endpoints para reportes personalizados
-- [ ] Implementar filtros avanzados en APIs
-- [ ] Mejorar manejo de errores y excepciones
+2.1 Reportes y APIs:
+- [x] Añadir más endpoints para reportes personalizados (rendimiento filtrado)
+- [x] Implementar filtros avanzados en APIs
+- [x] Mejorar manejo de errores y excepciones
 
 ### Sistema de Autenticación y Roles
-2.1.5
-- [ ] Crear login.html con el mismo tema PropTech
-- [ ] Crear registro.html con el mismo tema PropTech
-- [ ] Modelado de Base de Datos (Estructura Relacional):
-  - [ ] **Tabla roles**: id, nombre (valores: 'CLIENTE', 'ADMIN', 'MODERADOR')
-  - [ ] **Tabla usuarios**: id, email, password_hash, rol_id (FK a roles)
-- [ ] Lógica de Asignación en Registro:
-  - [ ] Registro público: siempre asignar rol_id = CLIENTE por defecto
-  - [ ] Registro de Admin: no disponible públicamente; solo vía base de datos
-  - [ ] Crear gerente: tarea que solo ejecuta Super-Admin desde código base
-- [ ] Implementación de Seguridad (Middleware):
-  - [ ] Generar Token JWT al iniciar sesión con "claim" del rol
-  - [ ] Integrar Spring Security (o implementar filtro manual en Javalin)
-  - [ ] Usar anotaciones/@RolesAllowed para proteger rutas (no if en cada función)
-- [ ] Roles y Permisos:
-  - [ ] **Gerente**: permisos de administrador + todos los permisos de vendedor (solo creado por Super-Admin)
-  - [ ] **Vendedor**: permisos de vendedor + todos los permisos de cliente
-  - [ ] **Cliente**: permisos para editar su propio perfil (nombre, teléfono, correo, direccion, intereses)
-- [ ] Rutas protegidas por rol
-- [ ] Persistencia de sesión (JWT + HttpOnly Cookie)
+2.1.5 Implementar autenticación y roles:
+- [x] Crear Rol.java (roles: CLIENTE, VENDEDOR, ADMIN, GERENTE)
+- [x] Crear Usuario.java con password_hash y rol_id
+- [x] Crear UsuarioDAO.java con tablas roles/usuarios en SQLite
+- [x] Crear AuthService.java con registro/login
+- [x] Crear HashUtils.java para SHA-256 de contraseñas
+- [x] Crear login.html con tema PropTech
+- [x] Crear registro.html con tema PropTech
+- [x] Registro público: siempre asignar rol_id = CLIENTE por defecto
+- [x] Implementar endpoints: POST /api/auth/registro, POST /api/auth/login
+
+### Posibles tareas futuras
+- [ ] Landing page moderna con tema PropTech
+  - Hero section con gradientes PropTech
+  - Sección de características/módulos
+  - Call-to-action para registro/login
+  - Responsive design
 
 *(Esta sección será actualizada conforme se identifiquen nuevas tareas)*

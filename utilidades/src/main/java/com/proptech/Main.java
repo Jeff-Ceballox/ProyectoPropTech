@@ -14,6 +14,8 @@ import com.proptech.servicio.OperacionesService;
 import com.proptech.servicio.RecomendacionService;
 import com.proptech.servicio.DetectorAnomaliesService;
 import com.proptech.servicio.ReporteService;
+import com.proptech.servicio.AuthService;
+import com.proptech.modelo.Usuario;
 
 import io.javalin.Javalin;
 import java.util.ArrayList;
@@ -63,6 +65,9 @@ public class Main {
 
         // 2.6 Iniciamos el servicio de reportes
         ReporteService reporteService = new ReporteService();
+
+        // 2.7 Iniciamos el servicio de autenticación
+        AuthService authService = new AuthService();
 
         // --- DEFINICIÓN DE RUTAS (ENDPOINTS) ---
         // 3. Encendemos el Servidor Web Javalin
@@ -304,6 +309,59 @@ public class Main {
         app.get("/api/reportes/tipos-operacion", ctx -> {
             Map<String, Integer> reporte = reporteService.generarReporteTiposOperacion();
             ctx.json(reporte);
+        });
+
+        // Reporte con filtros
+        app.get("/api/reportes/rendimiento-filtrado", ctx -> {
+            String tipo = ctx.queryParam("tipo");
+            String zona = ctx.queryParam("zona");
+            String precioMinStr = ctx.queryParam("precioMin");
+            
+            Double precioMin = null;
+            if (precioMinStr != null) {
+                try {
+                    precioMin = Double.parseDouble(precioMinStr);
+                } catch (NumberFormatException ignored) {}
+            }
+            
+            Map<String, Object> reporte = reporteService.generarReporteRendimientoFiltrado(tipo, zona, precioMin);
+            ctx.json(reporte);
+        });
+
+        // --- RUTAS API DE AUTENTICACIÓN ---
+        
+        // Registro de usuario
+        app.post("/api/auth/registro", ctx -> {
+            Map<String, String> datos = ctx.bodyAsClass(Map.class);
+            String email = datos.get("email");
+            String password = datos.get("password");
+            String nombre = datos.get("nombre");
+            
+            if (email == null || password == null || nombre == null) {
+                ctx.status(400).json(Map.of("error", "Faltan campos requeridos"));
+                return;
+            }
+            
+            Usuario usuario = authService.registrar(email, password, nombre);
+            if (usuario != null) {
+                ctx.json(Map.of("mensaje", "Usuario creado exitosamente", "email", usuario.getEmail()));
+            } else {
+                ctx.status(400).json(Map.of("error", "El email ya está registrado"));
+            }
+        });
+        
+        // Login
+        app.post("/api/auth/login", ctx -> {
+            Map<String, String> datos = ctx.bodyAsClass(Map.class);
+            String email = datos.get("email");
+            String password = datos.get("password");
+            
+            Usuario usuario = authService.login(email, password);
+            if (usuario != null) {
+                ctx.json(Map.of("mensaje", "Login exitoso", "rol", usuario.getRol().getNombre(), "nombre", usuario.getNombre()));
+            } else {
+                ctx.status(401).json(Map.of("error", "Credenciales inválidas"));
+            }
         });
 
         System.out.println("Servidor corriendo en: http://localhost:7070");

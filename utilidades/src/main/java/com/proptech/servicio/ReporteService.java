@@ -55,6 +55,37 @@ public class ReporteService {
         reporte.put("totalOperaciones", totalOperaciones);
         reporte.put("tasaConversion", String.format("%.2f%%", tasaConversion));
         
+        // Información adicional para filtrado
+        reporte.put("inmueblesDisponibles", contarInmueblesPorEstado("Disponible"));
+        reporte.put("inmueblesVendidos", contarInmueblesPorEstado("Vendido"));
+        
+        return reporte;
+    }
+    
+    /**
+     * Genera reporte de rendimiento con filtros aplicados.
+     */
+    public Map<String, Object> generarReporteRendimientoFiltrado(
+            String tipoOperacion, String zona, Double precioMin) {
+        Map<String, Object> reporte = new HashMap<>();
+        
+        ListaEnlazada<Inmueble> inmuebles = inmuebleDAO.obtenerTodos();
+        ListaEnlazada<Operacion> operaciones = operacionDAO.obtenerTodas();
+        
+        // Aplicar filtros
+        if (tipoOperacion != null && !tipoOperacion.isEmpty()) {
+            operaciones = filtrarOperacionesPorTipo(operaciones, tipoOperacion);
+        }
+        if (zona != null && !zona.isEmpty()) {
+            inmuebles = filtrarInmueblesPorZona(inmuebles, zona);
+        }
+        if (precioMin != null) {
+            inmuebles = filtrarInmueblesPorPrecio(inmuebles, precioMin);
+        }
+        
+        reporte.put("totalInmuebles", inmuebles.getTamaño());
+        reporte.put("totalOperaciones", operaciones.getTamaño());
+        
         return reporte;
     }
 
@@ -185,5 +216,63 @@ public class ReporteService {
             return palabras[0];
         }
         return direccion;
+    }
+    
+    /**
+     * Helper para contar inmuebles por estado.
+     */
+    private int contarInmueblesPorEstado(String estado) {
+        ListaEnlazada<Inmueble> inmuebles = inmuebleDAO.obtenerTodos();
+        int contador = 0;
+        for (int i = 0; i < inmuebles.getTamaño(); i++) {
+            if (estado.equals(inmuebles.obtener(i).getEstado())) {
+                contador++;
+            }
+        }
+        return contador;
+    }
+    
+    /**
+     * Helper para filtrar operaciones por tipo.
+     */
+    private ListaEnlazada<Operacion> filtrarOperacionesPorTipo(
+            ListaEnlazada<Operacion> operaciones, String tipo) {
+        ListaEnlazada<Operacion> filtradas = new ListaEnlazada<>();
+        for (int i = 0; i < operaciones.getTamaño(); i++) {
+            if (tipo.equals(operaciones.obtener(i).getTipo())) {
+                filtradas.agregar(operaciones.obtener(i));
+            }
+        }
+        return filtradas;
+    }
+    
+    /**
+     * Helper para filtrar inmuebles por zona.
+     */
+    private ListaEnlazada<Inmueble> filtrarInmueblesPorZona(
+            ListaEnlazada<Inmueble> inmuebles, String zona) {
+        ListaEnlazada<Inmueble> filtrados = new ListaEnlazada<>();
+        String zonaLower = zona.toLowerCase();
+        for (int i = 0; i < inmuebles.getTamaño(); i++) {
+            Inmueble inmueble = inmuebles.obtener(i);
+            if (extraerZona(inmueble.getDireccion()).toLowerCase().contains(zonaLower)) {
+                filtrados.agregar(inmueble);
+            }
+        }
+        return filtrados;
+    }
+    
+    /**
+     * Helper para filtrar inmuebles por precio mínimo.
+     */
+    private ListaEnlazada<Inmueble> filtrarInmueblesPorPrecio(
+            ListaEnlazada<Inmueble> inmuebles, Double precioMin) {
+        ListaEnlazada<Inmueble> filtrados = new ListaEnlazada<>();
+        for (int i = 0; i < inmuebles.getTamaño(); i++) {
+            if (inmuebles.obtener(i).getPrecio() >= precioMin) {
+                filtrados.agregar(inmuebles.obtener(i));
+            }
+        }
+        return filtrados;
     }
 }

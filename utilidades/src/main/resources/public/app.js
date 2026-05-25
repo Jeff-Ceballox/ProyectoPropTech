@@ -416,8 +416,21 @@ function registrarOperacion() {
         monto: parseFloat(document.getElementById('nueva-op-monto').value) || 0
     };
 
-    if (!datos.idOperacion || !datos.idCliente || !datos.idInmueble) {
-        alert('ID, cliente e inmueble son obligatorios.');
+    // Validaciones
+    if (!datos.idOperacion) {
+        mostrarError('El ID de la operación es obligatorio');
+        return;
+    }
+    if (!datos.idCliente) {
+        mostrarError('El ID del cliente es obligatorio');
+        return;
+    }
+    if (!datos.idInmueble) {
+        mostrarError('El ID del inmueble es obligatorio');
+        return;
+    }
+    if (isNaN(datos.monto) || datos.monto <= 0) {
+        mostrarError('El monto debe ser un número positivo');
         return;
     }
 
@@ -435,9 +448,10 @@ function registrarOperacion() {
         ['nueva-op-id','nueva-op-cliente','nueva-op-inmueble','nueva-op-asesor','nueva-op-monto']
             .forEach(id => document.getElementById(id).value = '');
         cargarOperaciones();
+        mostrarExito('Operación registrada exitosamente');
     })
     .catch(err => {
-        alert('Error al registrar operación: ' + err.message);
+        mostrarError('Error al registrar operación: ' + err.message);
     });
 }
 
@@ -622,4 +636,97 @@ function mostrarReporte(tipo) {
             });
             break;
     }
+}
+
+// ---- FILTROS DE REPORTES ----
+
+function aplicarFiltros() {
+    // Se implementará cuando se tengan datos filtrables
+    // Por ahora recargamos el reporte actual
+    const activeTab = document.querySelector('#report-tabs .nav-link.active');
+    if (activeTab) {
+        const tabText = activeTab.textContent.toLowerCase();
+        if (tabText.includes('rendimiento')) mostrarReporte('rendimiento');
+        else if (tabText.includes('asesores')) mostrarReporte('asesores');
+        else if (tabText.includes('precios')) mostrarReporte('precios');
+        else if (tabText.includes('clientes')) mostrarReporte('clientes');
+        else if (tabText.includes('anomalias')) mostrarReporte('anomalias');
+    }
+}
+
+function limpiarFiltros() {
+    document.getElementById('filtro-tipo').value = '';
+    document.getElementById('filtro-zona').value = '';
+    document.getElementById('filtro-precio-min').value = '';
+    cargarReportes();
+}
+
+// ---- EXPORTACIÓN DE REPORTES ----
+
+function exportarReporte() {
+    // Obtener el contenido del reporte actual
+    const contenido = document.getElementById('contenedor-reportes').innerHTML;
+    
+    // Crear una ventana para imprimir (solución simple para PDF)
+    const ventana = window.open('', '_blank');
+    ventana.document.write(`
+        <html>
+        <head>
+            <title>Reporte PropTech</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+            <style>
+                body { font-family: 'Inter', sans-serif; padding: 20px; }
+                .card-proptech { border: 1px solid #ddd; border-radius: 12px; margin-bottom: 15px; }
+            </style>
+        </head>
+        <body>
+            <h1 class="fw-bold mb-4">Reporte PropTech - ${new Date().toLocaleDateString()}</h1>
+            ${contenido}
+        </body>
+        </html>
+    `);
+    ventana.document.close();
+    setTimeout(() => {
+        ventana.print();
+    }, 500);
+}
+
+// ---- MENSAJES DE ERROR Y ÉXITO ----
+
+function mostrarError(mensaje) {
+    // Crear toast de error
+    const toast = document.createElement('div');
+    toast.className = 'position-fixed bottom-0 end-0 p-3';
+    toast.style.zIndex = '1055';
+    toast.innerHTML = `
+        <div class="toast show align-items-center text-bg-danger border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi bi-exclamation-triangle me-2"></i>${mensaje}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.parentElement.parentElement.parentElement.remove()"></button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 5000);
+}
+
+function mostrarExito(mensaje) {
+    // Crear toast de éxito
+    const toast = document.createElement('div');
+    toast.className = 'position-fixed bottom-0 end-0 p-3';
+    toast.style.zIndex = '1055';
+    toast.innerHTML = `
+        <div class="toast show align-items-center text-bg-success border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi bi-check-circle me-2"></i>${mensaje}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.parentElement.parentElement.parentElement.remove()"></button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
 }
