@@ -8,7 +8,7 @@ import java.sql.*;
 public class ConexionDB {
     
     // Ruta del archivo de base de datos. Se creará automáticamente en la raíz del proyecto.
-    private static final String URL = "jdbc:sqlite:" + System.getProperty("user.dir").replace("utilidades", "") + "inmobiliaria.db";
+    private static final String URL = "jdbc:sqlite:" + System.getProperty("user.home") + "/.proptech/inmobiliaria.db";
 
     /**
      * Establece la conexión con SQLite.
@@ -16,8 +16,10 @@ public class ConexionDB {
      */
     public static Connection conectar() {
         try {
-            return DriverManager.getConnection(URL);
-        } catch (SQLException e) {
+            String dbPath = System.getProperty("user.home") + "/.proptech/inmobiliaria.db";
+            java.nio.file.Files.createDirectories(java.nio.file.Paths.get(System.getProperty("user.home") + "/.proptech"));
+            return DriverManager.getConnection("jdbc:sqlite:" + dbPath);
+        } catch (SQLException | java.io.IOException e) {
             System.out.println("Error fatal conectando a la base de datos: " + e.getMessage());
             return null;
         }

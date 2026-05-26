@@ -66,7 +66,7 @@ public class Main {
         // 2.6 Iniciamos el servicio de reportes
         ReporteService reporteService = new ReporteService();
 
-        // 2.7 Iniciamos el servicio de autenticación
+// 2.7 Iniciamos el servicio de autenticación
         AuthService authService = new AuthService();
 
         // --- DEFINICIÓN DE RUTAS (ENDPOINTS) ---
