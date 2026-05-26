@@ -15,6 +15,50 @@ public class UsuarioDAO {
         this.cacheUsuarios = new ConcurrentHashMap<>();
         this.cacheRoles = new ConcurrentHashMap<>();
         inicializarRoles();
+        cargarRolesDesdeSQL();
+        cargarUsuariosDesdeSQL();
+    }
+    
+    private void cargarUsuariosDesdeSQL() {
+        try (Connection conn = ConexionDB.conectar()) {
+            PreparedStatement stmt = conn.prepareStatement(
+                "SELECT u.id_usuario, u.email, u.password_hash, u.nombre, u.telefono, u.direccion, u.intereses, u.foto_perfil, u.activo, r.id_rol, r.nombre as rol_nombre " +
+                "FROM usuarios u JOIN roles r ON u.rol_id = r.id_rol"
+            );
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Rol rol = new Rol(rs.getInt("id_rol"), rs.getString("rol_nombre"));
+                Usuario usuario = new Usuario(
+                    rs.getInt("id_usuario"),
+                    rs.getString("email"),
+                    rs.getString("password_hash"),
+                    rol,
+                    rs.getString("nombre")
+                );
+                usuario.setTelefono(rs.getString("telefono"));
+                usuario.setDireccion(rs.getString("direccion"));
+                usuario.setIntereses(rs.getString("intereses"));
+                usuario.setFotoPerfil(rs.getString("foto_perfil"));
+                usuario.setActivo(rs.getInt("activo") == 1);
+                cacheUsuarios.put(rs.getString("email"), usuario);
+            }
+            System.out.println("Sincronización completada: " + cacheUsuarios.size() + " usuarios cargados en memoria RAM.");
+        } catch (SQLException e) {
+            System.err.println("Error cargando usuarios: " + e.getMessage());
+        }
+    }
+    
+    private void cargarRolesDesdeSQL() {
+        if (!cacheRoles.isEmpty()) return;
+        try (Connection conn = ConexionDB.conectar()) {
+            PreparedStatement stmt = conn.prepareStatement("SELECT id_rol, nombre FROM roles");
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                cacheRoles.put(rs.getString("nombre"), new Rol(rs.getInt("id_rol"), rs.getString("nombre")));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error cargando roles: " + e.getMessage());
+        }
     }
     
     private void inicializarRoles() {

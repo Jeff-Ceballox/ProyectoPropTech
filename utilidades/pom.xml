@@ -111,6 +111,20 @@
                     <mainClass>com.proptech.Main</mainClass>
                 </configuration>
             </plugin>
+            
+            <!-- Plugin para empaquetar JAR con clase principal -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.proptech.Main</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>

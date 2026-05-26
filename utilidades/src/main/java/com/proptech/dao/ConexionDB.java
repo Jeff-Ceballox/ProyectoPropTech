@@ -8,7 +8,7 @@ import java.sql.*;
 public class ConexionDB {
     
     // Ruta del archivo de base de datos. Se creará automáticamente en la raíz del proyecto.
-    private static final String URL = "jdbc:sqlite:inmobiliaria.db";
+    private static final String URL = "jdbc:sqlite:" + System.getProperty("user.dir").replace("utilidades", "") + "inmobiliaria.db";
 
     /**
      * Establece la conexión con SQLite.
