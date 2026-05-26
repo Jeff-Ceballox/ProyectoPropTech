@@ -230,7 +230,7 @@ Basado en el documento de requisitos proporcionado, identificar módulos faltant
 - [x] Subir foto de perfil (almacenamiento local)
 - [x] Editar nombre, teléfono, correo, dirección, intereses
 - [x] No permitir cambio de ID
-- [x] Opción "Cerrar sesión" que redirige a landing.html
+- [x] Opción "Cerrar sesión" que redirige a landing.html 
 - [x] Persistir sesión en localStorage
 
 ### Corrección de bugs y unificación de estilos
