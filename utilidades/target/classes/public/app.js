@@ -195,9 +195,9 @@ function cargarClientes() {
                 return;
             }
 
-            clientes.forEach((cliente, idx) => {
+clientes.forEach((cliente, idx) => {
                 const iniciales = cliente.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                const colores = ['#e94560', '#0f3460', '#533483', '#16213e', '#1a1a2e'];
+                const colores = ['var(--color-primario)', 'var(--color-secundario)'];
                 const color = colores[idx % colores.length];
 
                 const tarjeta = `
@@ -214,33 +214,20 @@ function cargarClientes() {
                                 </div>
                             </div>
                             <div class="card-body p-4">
-                                <div class="budget-tag mb-2">$${cliente.presupuestoMaximo}M</div>
-                                <p class="text-muted small mb-1">Presupuesto máximo</p>
-                                <hr class="my-3">
-                                <div class="d-flex flex-column gap-2 small">
-                                    <span>📞 ${cliente.telefono}</span>
-                                    <span>📧 ${cliente.email}</span>
+                                    <div class="budget-tag mb-2">$${cliente.presupuestoMaximo}M</div>
+                                    <p class="text-muted small mb-1">Presupuesto máximo</p>
+                                    <hr class="my-3">
+                                    <div class="d-flex flex-column gap-2 small">
+                                        <span>📞 ${cliente.telefono}</span>
+                                        <span>📧 ${cliente.email}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 `;
                 contenedor.innerHTML += tarjeta;
-            });
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            document.getElementById('contenedor-clientes').innerHTML = `
-                <div class="alert alert-danger text-center w-100 shadow-sm rounded-4">
-                    <h5>❌ Error de conexión</h5>
-                    <p>No se pudo conectar con el servidor.</p>
-                </div>
-            `;
-        });
-}
-
-function buscarClientePorId() {
-    const id = document.getElementById('input-buscar-cliente').value.trim();
+            });;
     if (!id) return;
 
     const resultDiv = document.getElementById('resultado-busqueda');
@@ -367,8 +354,8 @@ function cargarOperaciones() {
             }
 
             operaciones.forEach((operacion, idx) => {
-                const colorTipo = operacion.tipo === 'Venta' ? '#e94560' : 
-                                  operacion.tipo === 'Arriendo' ? '#0f3460' : '#533483';
+                const colorTipo = operacion.tipo === 'Venta' ? 'var(--color-primario)' : 
+                                  operacion.tipo === 'Arriendo' ? 'var(--color-secundario)' : 'var(--color-primario)';
                 
                 const tarjeta = `
                     <div class="col-md-4 fade-in" style="animation-delay: ${idx * 0.1}s">
@@ -379,7 +366,7 @@ function cargarOperaciones() {
                             </div>
                             <div class="card-body p-4">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span class="badge rounded-pill px-3 py-1" style="background: ${colorTipo}20; color: ${colorTipo};">
+                                    <span class="badge rounded-pill px-3 py-1" style="background: var(--color-fondo-claro); color: var(--color-primario);">
                                         ${operacion.tipo}
                                     </span>
                                     <span class="price-tag mb-2">$${operacion.monto}M</span>

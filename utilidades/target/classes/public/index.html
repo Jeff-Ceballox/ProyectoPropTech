@@ -15,25 +15,24 @@
 <body>
 
     <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm py-3"
-        style="background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);">
+    <nav class="navbar navbar-expand-lg shadow-sm py-3 sticky-header" style="background-color: var(--color-fondo);">
         <div class="container">
-            <a class="navbar-brand fw-bold fs-4" href="#">Inmobiliaria 3214</a>
+            <a class="navbar-brand fw-bold fs-4" href="#" style="color: var(--color-secundario);">Insignia Inmo</a>
             <div class="ms-auto d-flex align-items-center gap-3">
-                <button class="btn btn-nav active" onclick="mostrarSeccion('inmuebles')" id="btn-nav-inmuebles">
+                <button class="btn btn-nav active rounded-pill fw-bold px-3" onclick="mostrarSeccion('inmuebles')" id="btn-nav-inmuebles">
                     🏠 Inmuebles
                 </button>
-                <button class="btn btn-nav" onclick="mostrarSeccion('clientes')" id="btn-nav-clientes">
+                <button class="btn btn-nav rounded-pill fw-bold px-3" onclick="mostrarSeccion('clientes')" id="btn-nav-clientes">
                     👥 Clientes
                 </button>
-                <button class="btn btn-nav" onclick="mostrarSeccion('operaciones')" id="btn-nav-operaciones">
+                <button class="btn btn-nav rounded-pill fw-bold px-3" onclick="mostrarSeccion('operaciones')" id="btn-nav-operaciones">
                     💼 Operaciones
                 </button>
-                <button class="btn btn-nav" onclick="mostrarSeccion('reportes')" id="btn-nav-reportes">
+                <button class="btn btn-nav rounded-pill fw-bold px-3" onclick="mostrarSeccion('reportes')" id="btn-nav-reportes">
                     📊 Reportes
                 </button>
                 <div class="dropdown">
-                    <button class="btn btn-nav dropdown-toggle d-flex align-items-center" type="button" id="dropdownPerfil" data-bs-toggle="dropdown">
+                    <button class="btn btn-nav dropdown-toggle d-flex align-items-center rounded-pill fw-bold px-3" type="button" id="dropdownPerfil" data-bs-toggle="dropdown">
                         <span id="nombre-usuario-nav">Perfil</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
@@ -47,32 +46,30 @@
     </nav>
 
     <!-- HERO / BUSCADOR -->
-    <div class="hero-search py-5" style="background: linear-gradient(135deg, #0f3460, #533483);">
+    <div class="hero-search py-5" style="background-color: var(--color-fondo-claro);">
         <div class="container">
-            <h1 class="text-white fw-800 mb-2" style="font-size: 2.2rem;">Búsqueda Inteligente</h1>
-            <p class="text-white-50 mb-4">Inmuebles</p>
+            <h1 class="fw-bold mb-2" style="font-size: 2rem; color: var(--color-secundario);">Catálogo de Inmuebles</h1>
+            <p class="mb-4 text-muted">Busca tu propiedad ideal</p>
 
             <!-- Buscador de Inmuebles -->
             <div id="buscador-inmuebles" class="search-box">
-                <div class="input-group input-group-lg shadow-lg rounded-pill overflow-hidden">
+                <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden">
                     <span class="input-group-text bg-white border-0 ps-4">🔍</span>
                     <input type="text" class="form-control border-0" id="input-buscar-inmueble"
                         placeholder="Buscar inmueble por código"
                         onkeydown="if(event.key==='Enter') buscarInmueblePorCodigo()">
-                    <button class="btn btn-warning fw-bold px-4" onclick="buscarInmueblePorCodigo()">
-                        Buscar
-                    </button>
+                    <button class="btn btn-primary fw-bold px-4 rounded-pill" onclick="buscarInmueblePorCodigo()">Buscar</button>
                 </div>
             </div>
 
             <!-- Buscador de Clientes -->
             <div id="buscador-clientes" class="search-box" style="display:none;">
-                <div class="input-group input-group-lg shadow-lg rounded-pill overflow-hidden">
+                <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden">
                     <span class="input-group-text bg-white border-0 ps-4">🔍</span>
                     <input type="text" class="form-control border-0" id="input-buscar-cliente"
-                        placeholder="Buscar cliente por identificación "
+                        placeholder="Buscar cliente por identificación"
                         onkeydown="if(event.key==='Enter') buscarClientePorId()">
-                    <button class="btn btn-warning fw-bold px-4" onclick="buscarClientePorId()">
+                    <button class="btn btn-primary fw-bold px-4 rounded-pill" onclick="buscarClientePorId()">
                         Buscar
                     </button>
                 </div>
@@ -80,12 +77,12 @@
 
             <!-- Buscador de Operaciones -->
             <div id="buscador-operaciones" class="search-box" style="display:none;">
-                <div class="input-group input-group-lg shadow-lg rounded-pill overflow-hidden">
+                <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden">
                     <span class="input-group-text bg-white border-0 ps-4">🔍</span>
                     <input type="text" class="form-control border-0" id="input-buscar-operacion"
                         placeholder="Buscar operación por tipo (Venta/Arriendo)..."
                         onkeydown="if(event.key==='Enter') buscarOperacionPorTipo()">
-                    <button class="btn btn-warning fw-bold px-4" onclick="buscarOperacionPorTipo()">
+                    <button class="btn btn-primary fw-bold px-4 rounded-pill" onclick="buscarOperacionPorTipo()">
                         Buscar
                     </button>
                 </div>
@@ -105,12 +102,10 @@
 
         <!-- SECCIÓN INMUEBLES -->
         <div id="seccion-inmuebles">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="fw-bold text-dark">
-                    <span style="color: #0f3460;">Catálogo</span> de Inmuebles
-                </h2>
-                <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill" id="contador-inmuebles">Cargando...</span>
-            </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="fw-bold text-dark"><span style="color: var(--color-primario);">Catálogo</span> de Inmuebles</h2>
+                        <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill" id="contador-inmuebles">Cargando...</span>
+                    </div>
 
             <div id="contenedor-inmuebles" class="row g-4">
                 <div class="col-12 text-center text-muted" id="mensaje-carga">
@@ -123,16 +118,14 @@
         <!-- SECCIÓN CLIENTES -->
         <div id="seccion-clientes" style="display:none;">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="fw-bold text-dark">
-                    <span style="color: #533483;">Directorio</span> de Clientes
-                </h2>
-                <div class="d-flex gap-2">
-                    <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill" id="contador-clientes">Cargando...</span>
-                    <button class="btn btn-success rounded-pill fw-bold px-4 shadow-sm" onclick="abrirModalCliente()">
-                        ➕ Registrar Cliente
-                    </button>
-                </div>
-            </div>
+                        <h2 class="fw-bold text-dark"><span style="color: var(--color-primario);">Directorio</span> de Clientes</h2>
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill" id="contador-clientes">Cargando...</span>
+                            <button class="btn btn-primary rounded-pill fw-bold px-4 shadow-sm" onclick="abrirModalCliente()">
+                                ➕ Registrar Cliente
+                            </button>
+                        </div>
+                    </div>
 
             <div id="contenedor-clientes" class="row g-4">
                 <div class="col-12 text-center text-muted">
@@ -145,17 +138,14 @@
         <!-- SECCIÓN OPERACIONES -->
         <div id="seccion-operaciones" style="display:none;">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="fw-bold text-dark">
-                    <span style="color: #e94560;">Gestión</span> de Operaciones
-                </h2>
-                <div class="d-flex gap-2">
-                    <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill"
-                        id="contador-operaciones">Cargando...</span>
-                    <button class="btn btn-success rounded-pill fw-bold px-4 shadow-sm" onclick="abrirModalOperacion()">
-                        ➕ Nueva Operación
-                    </button>
-                </div>
-            </div>
+                        <h2 class="fw-bold text-dark"><span style="color: var(--color-primario);">Gestión</span> de Operaciones</h2>
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill" id="contador-operaciones">Cargando...</span>
+                            <button class="btn btn-primary rounded-pill fw-bold px-4 shadow-sm" onclick="abrirModalOperacion()">
+                                ➕ Nueva Operación
+                            </button>
+                        </div>
+                    </div>
 
             <div id="contenedor-operaciones" class="row g-4">
                 <div class="col-12 text-center text-muted">
@@ -168,18 +158,16 @@
         <!-- SECCIÓN REPORTES -->
         <div id="seccion-reportes" style="display:none;">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="fw-bold text-dark">
-                    <span style="color: #0f3460;">Reportes</span> y Análisis
-                </h2>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-outline-primary rounded-pill fw-bold px-3 shadow-sm" onclick="exportarReporte()">
-                        📄 Exportar PDF
-                    </button>
-                    <button class="btn btn-primary rounded-pill fw-bold px-4 shadow-sm" onclick="cargarReportes()">
-                        🔄 Actualizar Reportes
-                    </button>
-                </div>
-            </div>
+                        <h2 class="fw-bold text-dark"><span style="color: var(--color-primario);">Reportes</span> y Análisis</h2>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-secondary rounded-pill fw-bold px-3 shadow-sm" onclick="exportarReporte()">
+                                📄 Exportar PDF
+                            </button>
+                            <button class="btn btn-primary rounded-pill fw-bold px-4 shadow-sm" onclick="cargarReportes()">
+                                🔄 Actualizar Reportes
+                            </button>
+                        </div>
+                    </div>
 
             <!-- Filtros de Reportes -->
             <div class="card card-proptech mb-4 p-3">
@@ -236,7 +224,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">
                 <div class="modal-header border-0 pb-0"
-                    style="background: linear-gradient(135deg, #533483, #0f3460); border-radius: 1rem 1rem 0 0;">
+                    style="background: linear-gradient(135deg, var(--color-secundario), var(--color-primario)); border-radius: 1rem 1rem 0 0;">
                     <h5 class="modal-title text-white fw-bold">➕ Registrar Nuevo Cliente</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -284,7 +272,7 @@
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg rounded-4">
                 <div class="modal-header border-0"
-                    style="background: linear-gradient(135deg, #0f3460, #1a1a2e); border-radius: 1rem 1rem 0 0;">
+                    style="background: linear-gradient(135deg, var(--color-secundario), var(--color-primario)); border-radius: 1rem 1rem 0 0;">
                     <h5 class="modal-title text-white fw-bold" id="detalle-inmueble-titulo">Detalle</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -299,7 +287,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">
                 <div class="modal-header border-0"
-                    style="background: linear-gradient(135deg, #e94560, #0f3460); border-radius: 1rem 1rem 0 0;">
+                    style="background: linear-gradient(135deg, var(--color-primario), var(--color-secundario)); border-radius: 1rem 1rem 0 0;">
                     <h5 class="modal-title text-white fw-bold">➕ Registrar Nueva Operación</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>

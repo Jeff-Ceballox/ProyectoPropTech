@@ -1,26 +1,38 @@
 package com.proptech.dao;
 
 import java.sql.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  * Gestiona la conexión con la base de datos embebida SQLite.
  */
 public class ConexionDB {
     
-    // Ruta del archivo de base de datos. Se creará automáticamente en la raíz del proyecto.
-    private static final String URL = "jdbc:sqlite:" + System.getProperty("user.home") + "/.proptech/inmobiliaria.db";
-
+    // Ruta del archivo de base de datos
+    private static final String URL;
+    
+    static {
+        String os = System.getProperty("os.name").toLowerCase();
+        String separator = os.contains("win") ? "\\" : "/";
+        String dbPath = System.getProperty("user.home") + separator + ".proptech" + separator + "inmobiliaria.db";
+        URL = "jdbc:sqlite:" + dbPath;
+    }
+    
     /**
      * Establece la conexión con SQLite.
      * @return El objeto Connection de Java.
      */
     public static Connection conectar() {
         try {
-            String dbPath = System.getProperty("user.home") + "/.proptech/inmobiliaria.db";
-            java.nio.file.Files.createDirectories(java.nio.file.Paths.get(System.getProperty("user.home") + "/.proptech"));
+            String os = System.getProperty("os.name").toLowerCase();
+            String separator = os.contains("win") ? "\\" : "/";
+            String dbPath = System.getProperty("user.home") + separator + ".proptech" + separator + "inmobiliaria.db";
+            Files.createDirectories(Paths.get(System.getProperty("user.home") + separator + ".proptech"));
             return DriverManager.getConnection("jdbc:sqlite:" + dbPath);
         } catch (SQLException | java.io.IOException e) {
-            System.out.println("Error fatal conectando a la base de datos: " + e.getMessage());
+            System.err.println("Error fatal conectando a la base de datos: " + e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }

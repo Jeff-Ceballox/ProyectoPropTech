@@ -41,7 +41,36 @@ body {
     transform: translateY(-1px);
 }
 
-/* Search hero */
+/* Sticky header */
+.sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background-color: var(--color-fondo);
+    backdrop-filter: blur(10px);
+}
+
+/* Hero section */
+.hero-section {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    text-align: center;
+}
+
+/* Feature icon */
+.feature-icon {
+    font-size: 3rem;
+    color: var(--color-primario);
+}
+
+/* Testimonial card */
+.testimonial-card {
+    background: var(--color-fondo);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    border: 1px solid var(--color-primario);
+}
 .hero-search {
     position: relative;
 }

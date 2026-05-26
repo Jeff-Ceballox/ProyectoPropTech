@@ -29,11 +29,18 @@ import java.util.Map;
 public class Main {
     public static void main(String[] args) {
         System.out.println("=== Iniciando Plataforma PropTech ===");
+        System.out.println("Java version: " + System.getProperty("java.version"));
+        System.out.println("User home: " + System.getProperty("user.home"));
+        String os = System.getProperty("os.name").toLowerCase();
+        String separator = os.contains("win") ? "\\" : "/";
+        System.out.println("DB path: " + System.getProperty("user.home") + separator + ".proptech" + separator + "inmobiliaria.db");
         
         // 1. Inicializamos la Base de Datos SQLite
+        System.out.println("1. Inicializando base de datos...");
         ConexionDB.inicializarTablas();
 
         // 2. Cargamos nuestro cerebro (La capa de Servicio que usa las Tablas Hash y Árboles)
+        System.out.println("2. Iniciando servicios...");
         InventarioInmueblesService inventarioService = new InventarioInmueblesService();
 
         // (Opcional) Si la base de datos está vacía, agregamos un inmueble de prueba
