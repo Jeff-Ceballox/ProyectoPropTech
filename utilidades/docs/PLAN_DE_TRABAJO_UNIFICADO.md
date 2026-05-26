@@ -245,6 +245,18 @@ Basado en el documento de requisitos proporcionado, identificar módulos faltant
 - [x] Agregar Ticker/Marquee con CSS Animations debajo del header con mensaje "Descubre el mejor inmueble para ti"
 - [x] Cambiar nombre frontend de "PropTech" a "Insignia Inmo" (ver docs para nombre del proyecto)
 
+### Cambio de tema pagina
+**Objetivo:** Implementar sistema de temas claro/oscuro para toda la aplicación
+
+**Tareas:**
+- [ ] Crear sistema de temas (claro/oscuro) con CSS variables
+- [ ] Añadir selector de tema en header de todas las páginas
+- [ ] Persistir preferencia de tema en localStorage
+- [ ] Actualizar estilos.css con variables de color para tema claro
+- [ ] Actualizar estilos.css con variables de color para tema oscuro
+- [ ] Aplicar clases de tema a elementos dinámicamente
+- [ ] Crear botón toggle con icono de sol/luna
+
 ## Nota sobre el nombre del proyecto
 **Insignia Inmo** es el nombre comercial del proyecto. El backend mantiene referencias a "PropTech" para compatibilidad técnica, pero la interfaz de usuario muestra "Insignia Inmo".
 *(Esta sección será actualizada conforme se identifiquen nuevas tareas)*
