@@ -256,7 +256,7 @@ Basado en el documento de requisitos proporcionado, identificar módulos faltant
 - [ ] Actualizar estilos.css con variables de color para tema oscuro
 - [ ] Aplicar clases de tema a elementos dinámicamente
 - [ ] Crear botón toggle con icono de sol/luna
-
+ 
 ## Nota sobre el nombre del proyecto
 **Insignia Inmo** es el nombre comercial del proyecto. El backend mantiene referencias a "PropTech" para compatibilidad técnica, pero la interfaz de usuario muestra "Insignia Inmo".
 *(Esta sección será actualizada conforme se identifiquen nuevas tareas)*
