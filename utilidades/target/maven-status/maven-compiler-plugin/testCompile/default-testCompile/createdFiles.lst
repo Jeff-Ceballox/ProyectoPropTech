@@ -1,3 +1,4 @@
 com\proptech\utilidades\estructuras\EstructurasTest.class
-com\proptech\dao\DatabaseTest.class
+com\proptech\dao\CheckUsuarios.class
 com\proptech\servicio\ServiciosTest.class
+com\proptech\dao\DatabaseTest.class

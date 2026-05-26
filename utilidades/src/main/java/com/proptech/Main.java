@@ -18,6 +18,10 @@ import com.proptech.servicio.AuthService;
 import com.proptech.modelo.Usuario;
 
 import io.javalin.Javalin;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -331,7 +335,25 @@ public class Main {
             ctx.json(reporte);
         });
 
+        // --- RUTAS API DE DIAGNÓSTICO ---
+        app.get("/api/diagnostico/usuarios", ctx -> {
+            try (Connection conn = ConexionDB.conectar()) {
+                if (conn == null) {
+                    ctx.json(Map.of("error", "No se pudo conectar a la base de datos"));
+                    return;
+                }
+                PreparedStatement stmt = conn.prepareStatement("SELECT COUNT(*) as total FROM usuarios");
+                ResultSet rs = stmt.executeQuery();
+                rs.next();
+                int total = rs.getInt("total");
+                ctx.json(Map.of("usuariosEnBD", total, "bdPath", System.getProperty("user.home") + "/.proptech/inmobiliaria.db"));
+            } catch (SQLException e) {
+                ctx.json(Map.of("error", e.getMessage()));
+            }
+        });
+        
         // --- RUTAS API DE AUTENTICACIÓN ---
+        // Auth service ya fue instanciado antes
         
         // Registro de usuario
         app.post("/api/auth/registro", ctx -> {
@@ -365,6 +387,17 @@ public class Main {
             } else {
                 ctx.status(401).json(Map.of("error", "Credenciales inválidas"));
             }
+        });
+        
+        // Obtener todos los usuarios (directo de BD)
+        app.get("/api/usuarios", ctx -> {
+            com.proptech.dao.UsuarioDAO usuarioDAO = new com.proptech.dao.UsuarioDAO();
+            ListaEnlazada<Usuario> usuarios = usuarioDAO.obtenerTodos();
+            List<Usuario> listaParaWeb = new ArrayList<>();
+            for (int i = 0; i < usuarios.getTamaño(); i++) {
+                listaParaWeb.add(usuarios.obtener(i));
+            }
+            ctx.json(listaParaWeb);
         });
         
         // Obtener perfil

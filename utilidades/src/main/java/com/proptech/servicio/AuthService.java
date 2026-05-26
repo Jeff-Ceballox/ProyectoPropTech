@@ -28,14 +28,18 @@ public class AuthService {
     }
     
     public Usuario login(String email, String password) {
+        // Primero sincronizamos con BD por si se reinició la app
         Usuario usuario = usuarioDAO.buscarPorEmail(email);
         if (usuario == null || !usuario.isActivo()) {
+            System.out.println("Login fallido para: " + email + " - Usuario no encontrado o inactivo");
             return null;
         }
         String passwordHash = HashUtils.sha256(password);
         if (passwordHash.equals(usuario.getPasswordHash())) {
+            System.out.println("Login exitoso para: " + email);
             return usuario;
         }
+        System.out.println("Login fallido - Contraseña incorrecta para: " + email);
         return null;
     }
     

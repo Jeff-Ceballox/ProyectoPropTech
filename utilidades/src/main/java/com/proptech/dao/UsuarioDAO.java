@@ -14,13 +14,75 @@ public class UsuarioDAO {
     public UsuarioDAO() {
         this.cacheUsuarios = new ConcurrentHashMap<>();
         this.cacheRoles = new ConcurrentHashMap<>();
-        inicializarRoles();
+        inicializarBaseDatosYRoles();
         cargarRolesDesdeSQL();
         cargarUsuariosDesdeSQL();
     }
     
+    public UsuarioDAO(boolean forzarRecarga) {
+        this.cacheUsuarios = new ConcurrentHashMap<>();
+        this.cacheRoles = new ConcurrentHashMap<>();
+        inicializarBaseDatosYRoles();
+        cargarRolesDesdeSQL();
+        if (forzarRecarga) cargarUsuariosDesdeSQL();
+    }
+    
+    private void inicializarBaseDatosYRoles() {
+        try (Connection conn = ConexionDB.conectar()) {
+            if (conn == null) {
+                System.err.println("Error fatal: No se pudo conectar a la base de datos");
+                return;
+            }
+            try (Statement stmt = conn.createStatement()) {
+                stmt.execute("""
+                    CREATE TABLE IF NOT EXISTS roles (
+                        id_rol INTEGER PRIMARY KEY AUTOINCREMENT,
+                        nombre TEXT UNIQUE NOT NULL
+                    )
+                    """);
+                stmt.execute("""
+                    CREATE TABLE IF NOT EXISTS usuarios (
+                        id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,
+                        email TEXT UNIQUE NOT NULL,
+                        password_hash TEXT NOT NULL,
+                        rol_id INTEGER NOT NULL,
+                        nombre TEXT NOT NULL,
+                        telefono TEXT,
+                        direccion TEXT,
+                        intereses TEXT,
+                        foto_perfil TEXT,
+                        activo INTEGER DEFAULT 1,
+                        FOREIGN KEY (rol_id) REFERENCES roles(id_rol)
+                    )
+                    """);
+                
+                try { stmt.execute("ALTER TABLE usuarios ADD COLUMN telefono TEXT"); } catch (SQLException ignored) {}
+                try { stmt.execute("ALTER TABLE usuarios ADD COLUMN direccion TEXT"); } catch (SQLException ignored) {}
+                try { stmt.execute("ALTER TABLE usuarios ADD COLUMN intereses TEXT"); } catch (SQLException ignored) {}
+                try { stmt.execute("ALTER TABLE usuarios ADD COLUMN foto_perfil TEXT"); } catch (SQLException ignored) {}
+                
+                try (PreparedStatement checkRoles = conn.prepareStatement("SELECT COUNT(*) FROM roles")) {
+                    ResultSet rs = checkRoles.executeQuery();
+                    rs.next();
+                    if (rs.getInt(1) == 0) {
+                        try (PreparedStatement insertRol = conn.prepareStatement("INSERT INTO roles (nombre) VALUES (?)")) {
+                            insertRol.setString(1, Rol.CLIENTE); insertRol.executeUpdate();
+                            insertRol.setString(1, Rol.VENDEDOR); insertRol.executeUpdate();
+                            insertRol.setString(1, Rol.ADMIN); insertRol.executeUpdate();
+                            insertRol.setString(1, Rol.GERENTE); insertRol.executeUpdate();
+                        }
+                        System.out.println("Roles inicializados en la base de datos");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error inicializando base de datos: " + e.getMessage());
+        }
+    }
+    
     private void cargarUsuariosDesdeSQL() {
         try (Connection conn = ConexionDB.conectar()) {
+            if (conn == null) return;
             PreparedStatement stmt = conn.prepareStatement(
                 "SELECT u.id_usuario, u.email, u.password_hash, u.nombre, u.telefono, u.direccion, u.intereses, u.foto_perfil, u.activo, r.id_rol, r.nombre as rol_nombre " +
                 "FROM usuarios u JOIN roles r ON u.rol_id = r.id_rol"
@@ -51,6 +113,7 @@ public class UsuarioDAO {
     private void cargarRolesDesdeSQL() {
         if (!cacheRoles.isEmpty()) return;
         try (Connection conn = ConexionDB.conectar()) {
+            if (conn == null) return;
             PreparedStatement stmt = conn.prepareStatement("SELECT id_rol, nombre FROM roles");
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -61,65 +124,9 @@ public class UsuarioDAO {
         }
     }
     
-    private void inicializarRoles() {
-        try (Connection conn = ConexionDB.conectar()) {
-            Statement stmt = conn.createStatement();
-            stmt.execute("""
-                CREATE TABLE IF NOT EXISTS roles (
-                    id_rol INTEGER PRIMARY KEY AUTOINCREMENT,
-                    nombre TEXT UNIQUE NOT NULL
-                )
-                """);
-            stmt.execute("""
-                CREATE TABLE IF NOT EXISTS usuarios (
-                    id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,
-                    email TEXT UNIQUE NOT NULL,
-                    password_hash TEXT NOT NULL,
-                    rol_id INTEGER NOT NULL,
-                    nombre TEXT NOT NULL,
-                    telefono TEXT,
-                    direccion TEXT,
-                    intereses TEXT,
-                    foto_perfil TEXT,
-                    activo INTEGER DEFAULT 1,
-                    FOREIGN KEY (rol_id) REFERENCES roles(id_rol)
-                )
-                """);
-            
-            try {
-                stmt.execute("ALTER TABLE usuarios ADD COLUMN telefono TEXT");
-            } catch (SQLException ignored) {}
-            try {
-                stmt.execute("ALTER TABLE usuarios ADD COLUMN direccion TEXT");
-            } catch (SQLException ignored) {}
-            try {
-                stmt.execute("ALTER TABLE usuarios ADD COLUMN intereses TEXT");
-            } catch (SQLException ignored) {}
-            try {
-                stmt.execute("ALTER TABLE usuarios ADD COLUMN foto_perfil TEXT");
-            } catch (SQLException ignored) {}
-            
-            PreparedStatement checkRoles = conn.prepareStatement("SELECT COUNT(*) FROM roles");
-            ResultSet rs = checkRoles.executeQuery();
-            rs.next();
-            if (rs.getInt(1) == 0) {
-                PreparedStatement insertRol = conn.prepareStatement("INSERT INTO roles (nombre) VALUES (?)");
-                insertRol.setString(1, Rol.CLIENTE);
-                insertRol.executeUpdate();
-                insertRol.setString(1, Rol.VENDEDOR);
-                insertRol.executeUpdate();
-                insertRol.setString(1, Rol.ADMIN);
-                insertRol.executeUpdate();
-                insertRol.setString(1, Rol.GERENTE);
-                insertRol.executeUpdate();
-            }
-        } catch (SQLException e) {
-            System.err.println("Error inicializando roles: " + e.getMessage());
-        }
-    }
-    
     public Usuario crear(String email, String passwordHash, String nombre, String nombreRol) {
         try (Connection conn = ConexionDB.conectar()) {
+            if (conn == null) return null;
             Rol rol = obtenerRolPorNombre(nombreRol);
             if (rol == null) return null;
             
@@ -147,6 +154,7 @@ public class UsuarioDAO {
     
     public boolean actualizar(Usuario usuario) {
         try (Connection conn = ConexionDB.conectar()) {
+            if (conn == null) return false;
             PreparedStatement stmt = conn.prepareStatement(
                 "UPDATE usuarios SET nombre = ?, telefono = ?, direccion = ?, intereses = ?, foto_perfil = ? WHERE id_usuario = ?"
             );
@@ -172,6 +180,7 @@ public class UsuarioDAO {
             return cacheUsuarios.get(email);
         }
         try (Connection conn = ConexionDB.conectar()) {
+            if (conn == null) return null;
             PreparedStatement stmt = conn.prepareStatement(
                 "SELECT u.id_usuario, u.email, u.password_hash, u.nombre, u.telefono, u.direccion, u.intereses, u.foto_perfil, u.activo, r.id_rol, r.nombre as rol_nombre " +
                 "FROM usuarios u JOIN roles r ON u.rol_id = r.id_rol WHERE u.email = ?"
@@ -204,6 +213,7 @@ public class UsuarioDAO {
     public ListaEnlazada<Usuario> obtenerTodos() {
         ListaEnlazada<Usuario> usuarios = new ListaEnlazada<>();
         try (Connection conn = ConexionDB.conectar()) {
+            if (conn == null) return usuarios;
             PreparedStatement stmt = conn.prepareStatement(
                 "SELECT u.id_usuario, u.email, u.password_hash, u.nombre, u.telefono, u.direccion, u.intereses, u.foto_perfil, u.activo, r.id_rol, r.nombre as rol_nombre " +
                 "FROM usuarios u JOIN roles r ON u.rol_id = r.id_rol"
@@ -236,6 +246,7 @@ public class UsuarioDAO {
             return cacheRoles.get(nombre);
         }
         try (Connection conn = ConexionDB.conectar()) {
+            if (conn == null) return null;
             PreparedStatement stmt = conn.prepareStatement("SELECT id_rol, nombre FROM roles WHERE nombre = ?");
             stmt.setString(1, nombre);
             ResultSet rs = stmt.executeQuery();
