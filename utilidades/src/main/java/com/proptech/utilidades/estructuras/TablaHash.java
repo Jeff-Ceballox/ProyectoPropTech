@@ -92,5 +92,30 @@ public class TablaHash<K, V> {
         return resultado;
     }
 
+    /**
+     * Elimina una entrada por su clave.
+     * @return true si se eliminó, false si no existía.
+     */
+    public boolean eliminar(K clave) {
+        int indice = calcularHash(clave);
+        EntradaHash<K, V> actual = tabla[indice];
+        EntradaHash<K, V> anterior = null;
+
+        while (actual != null) {
+            if (actual.getClave().equals(clave)) {
+                if (anterior == null) {
+                    tabla[indice] = actual.getSiguiente();
+                } else {
+                    anterior.setSiguiente(actual.getSiguiente());
+                }
+                tamaño--;
+                return true;
+            }
+            anterior = actual;
+            actual = actual.getSiguiente();
+        }
+        return false;
+    }
+
     public int getTamaño() { return tamaño; }
 }

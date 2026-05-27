@@ -156,14 +156,15 @@ public class UsuarioDAO {
         try (Connection conn = ConexionDB.conectar()) {
             if (conn == null) return false;
             PreparedStatement stmt = conn.prepareStatement(
-                "UPDATE usuarios SET nombre = ?, telefono = ?, direccion = ?, intereses = ?, foto_perfil = ? WHERE id_usuario = ?"
+                "UPDATE usuarios SET nombre = ?, telefono = ?, direccion = ?, intereses = ?, foto_perfil = ?, email = ? WHERE id_usuario = ?"
             );
             stmt.setString(1, usuario.getNombre());
             stmt.setString(2, usuario.getTelefono());
             stmt.setString(3, usuario.getDireccion());
             stmt.setString(4, usuario.getIntereses());
             stmt.setString(5, usuario.getFotoPerfil());
-            stmt.setInt(6, usuario.getIdUsuario());
+            stmt.setString(6, usuario.getEmail());
+            stmt.setInt(7, usuario.getIdUsuario());
             int rows = stmt.executeUpdate();
             if (rows > 0) {
                 cacheUsuarios.put(usuario.getEmail(), usuario);

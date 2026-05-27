@@ -23,6 +23,8 @@ import com.proptech.dao.ClienteDAO;
 import com.proptech.dao.InmuebleDAO;
 import com.proptech.dao.AsesorDAO;
 import com.proptech.dao.FavoritoDAO;
+import com.proptech.dao.UsuarioDAO;
+import com.proptech.modelo.Rol;
 
 import io.javalin.Javalin;
 import java.sql.Connection;
@@ -163,6 +165,35 @@ public class Main {
             ctx.status(201).json(nuevo);
         });
 
+        // Actualizar un inmueble existente
+        app.put("/api/inmuebles/{codigo}", ctx -> {
+            String codigo = ctx.pathParam("codigo");
+            Inmueble existente = inventarioService.buscarPorCodigo(codigo);
+            if (existente == null) {
+                ctx.status(404).json(Map.of("error", "Inmueble no encontrado: " + codigo));
+                return;
+            }
+            Inmueble datos = ctx.bodyAsClass(Inmueble.class);
+            datos.setCodigo(codigo);
+            if (datos.getEstado() == null || datos.getEstado().isEmpty()) {
+                datos.setEstado(existente.getEstado());
+            }
+            inventarioService.actualizarInmueble(datos);
+            ctx.json(datos);
+        });
+
+        // Eliminar un inmueble
+        app.delete("/api/inmuebles/{codigo}", ctx -> {
+            String codigo = ctx.pathParam("codigo");
+            Inmueble existente = inventarioService.buscarPorCodigo(codigo);
+            if (existente == null) {
+                ctx.status(404).json(Map.of("error", "Inmueble no encontrado: " + codigo));
+                return;
+            }
+            inventarioService.eliminarInmueble(codigo);
+            ctx.json(Map.of("mensaje", "Inmueble eliminado", "codigo", codigo));
+        });
+
         // Ruta de prueba para Alertas
         app.get("/api/alertas/siguiente", ctx -> {
             if (alertasService.hayAlertasPendientes()) {
@@ -202,6 +233,41 @@ public class Main {
             Cliente nuevo = ctx.bodyAsClass(Cliente.class);
             clientesService.registrarCliente(nuevo);
             ctx.status(201).json(nuevo);
+        });
+
+        // Re-sembrar datos de clientes de prueba (útil si la BD se reinició)
+        app.post("/api/clientes/seed", ctx -> {
+            clientesService.registrarCliente(new Cliente("CC-1001", "María García", "310-555-0101", 300.0, "maria.garcia@email.com"));
+            clientesService.registrarCliente(new Cliente("CC-1002", "Carlos Rodríguez", "320-555-0202", 450.0, "carlos.rod@email.com"));
+            clientesService.registrarCliente(new Cliente("NIT-9001", "Inversiones ABC S.A.S.", "601-555-0303", 1200.0, "contacto@inversionesabc.com"));
+            ctx.json(Map.of("mensaje", "Datos de prueba re-sembrados", "total", 3));
+        });
+
+        // Actualizar un cliente existente (para asesor/admin)
+        app.put("/api/clientes/{id}", ctx -> {
+            String id = ctx.pathParam("id");
+            Cliente existente = clientesService.buscarPorIdentificacion(id);
+            if (existente == null) {
+                ctx.status(404).json(Map.of("error", "Cliente no encontrado: " + id));
+                return;
+            }
+            Cliente datos = ctx.bodyAsClass(Cliente.class);
+            datos.setIdentificacion(id);
+            clientesService.actualizarCliente(datos);
+            ctx.json(datos);
+        });
+
+        // Eliminar un cliente (para asesor/admin)
+        app.delete("/api/clientes/{id}", ctx -> {
+            String id = ctx.pathParam("id");
+            Cliente existente = clientesService.buscarPorIdentificacion(id);
+            if (existente == null) {
+                ctx.status(404).json(Map.of("error", "Cliente no encontrado: " + id));
+                return;
+            }
+            ClienteDAO cd = new ClienteDAO();
+            cd.eliminar(id);
+            ctx.json(Map.of("mensaje", "Cliente eliminado", "id", id));
         });
 
         // --- RUTAS API DE OPERACIONES ---
@@ -406,7 +472,8 @@ public class Main {
                 String idCliente = "CLI-" + System.currentTimeMillis();
                 cliente = new Cliente(idCliente, emailCliente.split("@")[0], "", 0, emailCliente);
                 cliDAO.guardar(cliente);
-                System.out.println("Cliente creado automáticamente para email: " + emailCliente);
+                clientesService.registrarCliente(cliente);
+                System.out.println("Cliente creado automáticamente y cacheado para email: " + emailCliente);
             }
 
             // Buscar inmueble por código
@@ -479,6 +546,116 @@ public class Main {
             ctx.json(Map.of("mensaje", "Visita cancelada exitosamente", "idVisita", idVisita));
         });
 
+        // Obtener visitas asignadas a un asesor
+        app.get("/api/visitas/asesor/{idAsesor}", ctx -> {
+            String idAsesor = ctx.pathParam("idAsesor");
+            ListaEnlazada<Visita> todas = visitaService.obtenerTodas();
+            List<Visita> listaParaWeb = new ArrayList<>();
+            for (int i = 0; i < todas.getTamaño(); i++) {
+                Visita v = todas.obtener(i);
+                if (v.getAsesor() != null && v.getAsesor().getIdAsesor() != null &&
+                    idAsesor.equals(v.getAsesor().getIdAsesor())) {
+                    listaParaWeb.add(v);
+                }
+            }
+            ctx.json(listaParaWeb);
+        });
+
+        // Confirmar una visita (asesor confirma la cita)
+        app.put("/api/visitas/{idVisita}/confirmar", ctx -> {
+            String idVisita = ctx.pathParam("idVisita");
+            Visita v = visitaService.buscarPorId(idVisita);
+            if (v == null) {
+                ctx.status(404).json(Map.of("error", "Visita no encontrada: " + idVisita));
+                return;
+            }
+            visitaService.actualizarEstadoVisita(idVisita, "Confirmada");
+            ctx.json(Map.of("mensaje", "Visita confirmada", "idVisita", idVisita));
+        });
+
+        // Marcar visita como realizada (asesor completó la cita)
+        app.put("/api/visitas/{idVisita}/realizar", ctx -> {
+            String idVisita = ctx.pathParam("idVisita");
+            Visita v = visitaService.buscarPorId(idVisita);
+            if (v == null) {
+                ctx.status(404).json(Map.of("error", "Visita no encontrada: " + idVisita));
+                return;
+            }
+            visitaService.actualizarEstadoVisita(idVisita, "Realizada");
+            ctx.json(Map.of("mensaje", "Visita marcada como realizada", "idVisita", idVisita));
+        });
+
+        // --- DASHBOARD DEL ASESOR ---
+        app.get("/api/asesor/dashboard", ctx -> {
+            String email = ctx.queryParam("email");
+            if (email == null) {
+                ctx.status(400).json(Map.of("error", "Email requerido"));
+                return;
+            }
+            AsesorDAO asesorDao = new AsesorDAO();
+            // Buscar asesor por email
+            ListaEnlazada<Asesor> todosAsesores = asesorDao.obtenerTodos();
+            Asesor asesor = null;
+            for (int i = 0; i < todosAsesores.getTamaño(); i++) {
+                Asesor a = todosAsesores.obtener(i);
+                if (email.equals(a.getEmail())) {
+                    asesor = a;
+                    break;
+                }
+            }
+            if (asesor == null) {
+                // Auto-crear asesor para usuarios con rol VENDEDOR
+                UsuarioDAO usuarioDao = new UsuarioDAO();
+                Usuario u = usuarioDao.buscarPorEmail(email);
+                if (u != null && u.getRol() != null && (Rol.VENDEDOR.equals(u.getRol().getNombre()) || Rol.ADMIN.equals(u.getRol().getNombre()))) {
+                    String nuevoId = "ASESOR-AUTO-" + email.hashCode();
+                    asesor = new Asesor(nuevoId, u.getNombre(), "General", email, u.getTelefono());
+                    asesorDao.guardar(asesor);
+                    System.out.println("Asesor auto-creado para VENDEDOR: " + email);
+                } else {
+                    ctx.status(404).json(Map.of("error", "Asesor no encontrado con email: " + email));
+                    return;
+                }
+            }
+
+            // Calcular métricas desde las visitas
+            int visitasAtendidas = 0;
+            int visitasPendientes = 0;
+            ListaEnlazada<Visita> todasVisitas = visitaService.obtenerTodas();
+            for (int i = 0; i < todasVisitas.getTamaño(); i++) {
+                Visita v = todasVisitas.obtener(i);
+                if (v.getAsesor() != null && asesor.getIdAsesor().equals(v.getAsesor().getIdAsesor())) {
+                    if ("Realizada".equals(v.getEstado())) visitasAtendidas++;
+                    if ("Pendiente".equals(v.getEstado()) || "Confirmada".equals(v.getEstado())) visitasPendientes++;
+                }
+            }
+
+            // Operaciones cerradas desde el servicio
+            ListaEnlazada<Operacion> todasOps = operacionesService.obtenerTodas();
+            int operacionesCerradas = 0;
+            double totalVentas = 0;
+            for (int i = 0; i < todasOps.getTamaño(); i++) {
+                Operacion op = todasOps.obtener(i);
+                if (op.getAsesor() != null && asesor.getIdAsesor().equals(op.getAsesor().getIdAsesor())) {
+                    operacionesCerradas++;
+                    totalVentas += op.getMonto();
+                }
+            }
+
+            Map<String, Object> dashboard = new java.util.HashMap<>();
+            dashboard.put("nombre", asesor.getNombre());
+            dashboard.put("idAsesor", asesor.getIdAsesor());
+            dashboard.put("especialidad", asesor.getEspecialidad());
+            dashboard.put("email", asesor.getEmail());
+            dashboard.put("telefono", asesor.getTelefono());
+            dashboard.put("calificacion", asesor.getCalificacion());
+            dashboard.put("operacionesCerradas", operacionesCerradas);
+            dashboard.put("totalVentas", totalVentas);
+            dashboard.put("visitasAtendidas", visitasAtendidas);
+            dashboard.put("visitasPendientes", visitasPendientes);
+            ctx.json(dashboard);
+        });
+
         // --- RUTAS API DE FAVORITOS ---
 
         FavoritoDAO favoritoDAO = new FavoritoDAO();
@@ -545,7 +722,7 @@ public class Main {
             if (datos.containsKey("presupuestoMaximo")) {
                 c.setPresupuestoMaximo(((Number) datos.get("presupuestoMaximo")).doubleValue());
             }
-            cd.actualizar(c);
+            clientesService.actualizarCliente(c);
             ctx.json(Map.of("mensaje", "Perfil actualizado"));
         });
 
@@ -653,8 +830,8 @@ public class Main {
         });
         
         // Actualizar perfil de usuario
-        // - intereses y fotoPerfil: se actualizan al instante
-        // - nombre, telefono, direccion: crean cambio_pendiente (aprobación admin requerida)
+        // - intereses, fotoPerfil: se actualizan al instante
+        // - nombre, telefono, direccion, email: crean cambio_pendiente (aprobación admin requerida)
         // - si el usuario es ADMIN, todos los campos se aplican directamente
         app.put("/api/usuario/actualizar", ctx -> {
             Map<String, Object> datos = ctx.bodyAsClass(Map.class);
@@ -666,7 +843,8 @@ public class Main {
                 return;
             }
             
-            boolean esAdmin = "admin".equalsIgnoreCase(usuario.getRol().getNombre());
+            String rol = usuario.getRol().getNombre().toLowerCase();
+            boolean esAdminOAsesor = "admin".equals(rol) || "vendedor".equals(rol);
             List<String> cambiosPendientes = new ArrayList<>();
             boolean hayCambioDirecto = false;
             
@@ -675,6 +853,7 @@ public class Main {
             String nombre = (String) datos.get("nombre");
             String telefono = (String) datos.get("telefono");
             String direccion = (String) datos.get("direccion");
+            String nuevoEmail = (String) datos.get("nuevoEmail");
             
             // Actualizar intereses directamente
             if (intereses != null) {
@@ -688,14 +867,15 @@ public class Main {
                 hayCambioDirecto = true;
             }
             
-            if (esAdmin) {
-                // Admin: todos los campos se aplican directamente
+            if (esAdminOAsesor) {
+                // Admin/Asesor: todos los campos se aplican directamente
                 if (nombre != null) usuario.setNombre(nombre);
                 if (telefono != null) usuario.setTelefono(telefono);
                 if (direccion != null) usuario.setDireccion(direccion);
+                if (nuevoEmail != null && !nuevoEmail.equals(email)) usuario.setEmail(nuevoEmail);
                 hayCambioDirecto = true;
             } else {
-                // Cliente: nombre, telefono, direccion van a pendientes
+                // Cliente: nombre, telefono, direccion, email van a pendientes
                 String fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
                 
                 if (nombre != null && !nombre.equals(usuario.getNombre())) {
@@ -741,6 +921,22 @@ public class Main {
                         pstmt.setString(5, fecha);
                         pstmt.executeUpdate();
                         cambiosPendientes.add("direccion");
+                    } catch (SQLException e) {
+                        System.err.println("Error creando cambio pendiente: " + e.getMessage());
+                    }
+                }
+                
+                if (nuevoEmail != null && !nuevoEmail.equals(email)) {
+                    try (Connection conn = ConexionDB.conectar();
+                         PreparedStatement pstmt = conn.prepareStatement(
+                            "INSERT INTO cambios_pendientes (email_usuario, campo, valor_anterior, valor_nuevo, estado, fecha_solicitud) VALUES (?, ?, ?, ?, 'pendiente', ?)")) {
+                        pstmt.setString(1, email);
+                        pstmt.setString(2, "email");
+                        pstmt.setString(3, email);
+                        pstmt.setString(4, nuevoEmail);
+                        pstmt.setString(5, fecha);
+                        pstmt.executeUpdate();
+                        cambiosPendientes.add("email");
                     } catch (SQLException e) {
                         System.err.println("Error creando cambio pendiente: " + e.getMessage());
                     }
@@ -821,6 +1017,7 @@ public class Main {
                     case "nombre": usuario.setNombre(valorNuevo); break;
                     case "telefono": usuario.setTelefono(valorNuevo); break;
                     case "direccion": usuario.setDireccion(valorNuevo); break;
+                    case "email": usuario.setEmail(valorNuevo); break;
                 }
                 authService.actualizarPerfil(usuario);
                 

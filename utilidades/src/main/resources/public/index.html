@@ -39,7 +39,9 @@
                         <span id="nombre-usuario-nav">Perfil</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#" onclick="mostrarMisVisitas()">📅 Mis Visitas</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="mostrarMisVisitas()" id="dropdown-mis-visitas">📅 Mis Visitas</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="mostrarVisitasAsignadas()" id="dropdown-visitas-asignadas" style="display:none;">📋 Visitas Asignadas</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="mostrarDashboard()" id="dropdown-dashboard" style="display:none;">📊 Mi Dashboard</a></li>
                         <li><a class="dropdown-item" href="perfil.html">👤 Mi Perfil</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="landing.html" onclick="localStorage.removeItem('usuario')">🚪 Cerrar sesión</a></li>
@@ -108,7 +110,12 @@
         <div id="seccion-inmuebles">
 <div class="d-flex justify-content-between align-items-center mb-4">
                         <h2 class="fw-bold text-dark"><span style="color: var(--color-primario);">Catálogo</span> de Inmuebles</h2>
-                        <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill" id="contador-inmuebles">Cargando...</span>
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill" id="contador-inmuebles">Cargando...</span>
+                            <button class="btn btn-nav active rounded-pill fw-bold px-4 shadow-sm" id="btn-agregar-inmueble" onclick="abrirModalNuevoInmueble()">
+                                ➕ Agregar Inmueble
+                            </button>
+                        </div>
                     </div>
 
             <div id="contenedor-inmuebles" class="row g-4">
@@ -391,8 +398,191 @@
         </div>
     </div>
 
+    <!-- MODAL: Nuevo Inmueble (Asesor/Admin) -->
+    <div class="modal fade" id="modalNuevoInmueble" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0"
+                    style="background: linear-gradient(135deg, var(--color-secundario), var(--color-primario)); border-radius: 1rem 1rem 0 0;">
+                    <h5 class="modal-title text-white fw-bold">➕ Nuevo Inmueble</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Código</label>
+                            <input type="text" class="form-control rounded-pill" id="nuevo-inm-codigo" placeholder="Ej: A-003">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Tipo</label>
+                            <input type="text" class="form-control rounded-pill" id="nuevo-inm-tipo" placeholder="Ej: Apartamento">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Estado</label>
+                            <select class="form-select rounded-pill" id="nuevo-inm-estado">
+                                <option value="Disponible">Disponible</option>
+                                <option value="Vendido">Vendido</option>
+                                <option value="Arrendado">Arrendado</option>
+                                <option value="En negociación">En negociación</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Dirección</label>
+                            <input type="text" class="form-control rounded-pill" id="nuevo-inm-direccion" placeholder="Ej: Zona Norte">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Precio ($M)</label>
+                            <input type="number" step="0.1" class="form-control rounded-pill" id="nuevo-inm-precio" placeholder="Ej: 250">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Área (m²)</label>
+                            <input type="number" step="0.1" class="form-control rounded-pill" id="nuevo-inm-area" placeholder="Ej: 120">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Habitaciones</label>
+                            <input type="number" class="form-control rounded-pill" id="nuevo-inm-habitaciones" placeholder="Ej: 3">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Baños</label>
+                            <input type="number" class="form-control rounded-pill" id="nuevo-inm-banos" placeholder="Ej: 2">
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="nuevo-inm-parqueadero">
+                                <label class="form-check-label fw-bold">Tiene parqueadero</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Descripción</label>
+                            <textarea class="form-control rounded-3" id="nuevo-inm-descripcion" rows="2" placeholder="Descripción de la propiedad..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-nav active rounded-pill fw-bold px-4" onclick="guardarNuevoInmueble()">
+                        💾 Guardar Inmueble
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Editar Inmueble (Asesor/Admin) -->
+    <div class="modal fade" id="modalEditarInmueble" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0"
+                    style="background: linear-gradient(135deg, var(--color-secundario), var(--color-primario)); border-radius: 1rem 1rem 0 0;">
+                    <h5 class="modal-title text-white fw-bold">✏️ Editar Inmueble</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="edit-inm-codigo-original">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Código</label>
+                            <input type="text" class="form-control rounded-pill" id="edit-inm-codigo" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Tipo</label>
+                            <input type="text" class="form-control rounded-pill" id="edit-inm-tipo">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Estado</label>
+                            <select class="form-select rounded-pill" id="edit-inm-estado">
+                                <option value="Disponible">Disponible</option>
+                                <option value="Vendido">Vendido</option>
+                                <option value="Arrendado">Arrendado</option>
+                                <option value="En negociación">En negociación</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Dirección</label>
+                            <input type="text" class="form-control rounded-pill" id="edit-inm-direccion">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Precio ($M)</label>
+                            <input type="number" step="0.1" class="form-control rounded-pill" id="edit-inm-precio">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Área (m²)</label>
+                            <input type="number" step="0.1" class="form-control rounded-pill" id="edit-inm-area">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Habitaciones</label>
+                            <input type="number" class="form-control rounded-pill" id="edit-inm-habitaciones">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Baños</label>
+                            <input type="number" class="form-control rounded-pill" id="edit-inm-banos">
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="edit-inm-parqueadero">
+                                <label class="form-check-label fw-bold">Tiene parqueadero</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Descripción</label>
+                            <textarea class="form-control rounded-3" id="edit-inm-descripcion" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-nav active rounded-pill fw-bold px-4" onclick="guardarInmuebleEditado()">
+                        💾 Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Editar Cliente (Asesor/Admin) -->
+    <div class="modal fade" id="modalEditarCliente" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0"
+                    style="background: linear-gradient(135deg, var(--color-primario), var(--color-secundario)); border-radius: 1rem 1rem 0 0;">
+                    <h5 class="modal-title text-white fw-bold">✏️ Editar Cliente</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="edit-cli-id-original">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Identificación</label>
+                        <input type="text" class="form-control rounded-pill" id="edit-cli-id" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nombre Completo</label>
+                        <input type="text" class="form-control rounded-pill" id="edit-cli-nombre">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Teléfono</label>
+                        <input type="text" class="form-control rounded-pill" id="edit-cli-telefono">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Email</label>
+                        <input type="email" class="form-control rounded-pill" id="edit-cli-email">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Presupuesto Máximo ($M)</label>
+                        <input type="number" step="0.1" class="form-control rounded-pill" id="edit-cli-presupuesto">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-nav active rounded-pill fw-bold px-4" onclick="guardarClienteEditado()">
+                        💾 Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="app.js"></script>
+    <script src="app.js?v=2"></script>
 </body>
 
 </html>

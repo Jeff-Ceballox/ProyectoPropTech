@@ -15,6 +15,8 @@ public class Inmueble {
     private boolean tieneParqueadero;
     private String descripcion;
 
+    public Inmueble() {}
+
     public Inmueble(String codigo, String tipo, String direccion, double precio, double area, int habitaciones, int banos, boolean tieneParqueadero, String descripcion) {
         this.codigo = codigo;
         this.tipo = tipo; 

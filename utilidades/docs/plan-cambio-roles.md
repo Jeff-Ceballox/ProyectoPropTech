@@ -20,12 +20,12 @@ Asignar funciones específicas a cada rol (Cliente, Asesor, Admin) y reflejarlas
 - [x] **Botón "Guardar cambios" → "Volver"** — Al guardar cambios exitosamente, el botón cambia a "Volver a inmuebles" (o "Volver a página principal"). Al salir y volver a entrar a "Mi Perfil", el botón vuelve a mostrar "Guardar cambios". ✅ Implementado
 
 ### 2. Asesor (rol `asesor`)
-- [ ] **CRUD completo de inmuebles** — Puede crear, editar y eliminar propiedades.
-- [ ] **CRUD completo de clientes** — Puede registrar, modificar y eliminar clientes.
-- [ ] **Gestionar visitas** — Ver todas las visitas asignadas a él, confirmar/realizar/cancelar.
-- [ ] **Registrar operaciones** — Crear operaciones de Venta/Arriendo y asociarlas a un cliente e inmueble.
-- [ ] **Ver reportes de rendimiento** — Accede a Reportes, pero solo ve los suyos propios (operaciones que él cerró, visitas que atendió).
-- [ ] **Dashboard personal** — Tarjeta con sus métricas: operaciones cerradas, visitas atendidas, calificación.
+- [x] **CRUD completo de inmuebles** — Puede crear, editar y eliminar propiedades. ✅ Implementado
+- [x] **CRUD completo de clientes** — Puede registrar, modificar y eliminar clientes. ✅ Implementado
+- [x] **Gestionar visitas** — Ver todas las visitas asignadas a él, confirmar/realizar/cancelar. ✅ Implementado
+- [x] **Registrar operaciones** — Crear operaciones de Venta/Arriendo y asociarlas a un cliente e inmueble. ✅ Implementado
+- [x] **Ver reportes de rendimiento** — Accede a Reportes, pero solo ve los suyos propios (operaciones que él cerró, visitas que atendió). ✅ Implementado
+- [x] **Dashboard personal** — Tarjeta con sus métricas: operaciones cerradas, visitas atendidas, calificación. ✅ Implementado
 
 ### 3. Admin (rol `admin`)
 - [ ] **Acceso total a todo el sistema** — CRUD de inmuebles, clientes, operaciones, visitas, asesores.

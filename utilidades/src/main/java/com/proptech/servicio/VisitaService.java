@@ -111,7 +111,8 @@ public class VisitaService {
             // Por ahora asumimos que podemos acceder al cliente
             // TODO: Mejorar cuando Visita tenga getCliente() funcional
             if (visita.getCliente() != null && 
-                visita.getCliente().getIdentificacion().equals(identificacionCliente)) {
+                visita.getCliente().getIdentificacion() != null &&
+                identificacionCliente.equals(visita.getCliente().getIdentificacion())) {
                 resultado.agregar(visita);
             }
         }
@@ -129,7 +130,8 @@ public class VisitaService {
             Visita visita = todas.obtener(i);
             // TODO: Mejorar cuando Visita tenga getInmueble() funcional
             if (visita.getInmueble() != null && 
-                visita.getInmueble().getCodigo().equals(codigoInmueble)) {
+                visita.getInmueble().getCodigo() != null &&
+                codigoInmueble.equals(visita.getInmueble().getCodigo())) {
                 resultado.agregar(visita);
             }
         }

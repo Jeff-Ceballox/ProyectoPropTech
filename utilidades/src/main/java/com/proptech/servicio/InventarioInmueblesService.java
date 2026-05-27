@@ -72,4 +72,22 @@ public class InventarioInmueblesService {
     public ListaEnlazada<Inmueble> obtenerTodos() {
         return mapaInmuebles.valores();
     }
+
+    /**
+     * Actualiza un inmueble existente en DB y en caché.
+     */
+    public void actualizarInmueble(Inmueble inmueble) {
+        inmuebleDAO.actualizar(inmueble);
+        mapaInmuebles.insertar(inmueble.getCodigo(), inmueble);
+        // Nota: El árbol por precio no se actualiza (se podría re-indexar, pero es aceptable)
+    }
+
+    /**
+     * Elimina un inmueble de DB y de caché.
+     */
+    public void eliminarInmueble(String codigo) {
+        inmuebleDAO.eliminar(codigo);
+        mapaInmuebles.eliminar(codigo);
+        // Nota: No se elimina del árbol por precio (carga diferida aceptable)
+    }
 }

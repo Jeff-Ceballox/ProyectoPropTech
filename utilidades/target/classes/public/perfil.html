@@ -54,8 +54,8 @@
                             <input type="text" class="form-control rounded-pill" id="nombre" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Email (no editable)</label>
-                            <input type="email" class="form-control rounded-pill" id="email" disabled>
+                            <label class="form-label fw-bold">Email</label>
+                            <input type="email" class="form-control rounded-pill" id="email">
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Teléfono</label>
@@ -104,6 +104,7 @@
 
         function actualizarLocalStorage(data) {
             if (data.nombre) usuario.nombre = data.nombre;
+            if (data.nuevoEmail) usuario.email = data.nuevoEmail;
             if (data.telefono) usuario.telefono = data.telefono;
             if (data.direccion) usuario.direccion = data.direccion;
             if (data.intereses !== undefined) usuario.intereses = data.intereses;
@@ -128,6 +129,7 @@
 
             const datos = {
                 email: usuario.email,
+                nuevoEmail: document.getElementById('email').value,
                 nombre: document.getElementById('nombre').value,
                 telefono: document.getElementById('telefono').value,
                 direccion: document.getElementById('direccion').value,
