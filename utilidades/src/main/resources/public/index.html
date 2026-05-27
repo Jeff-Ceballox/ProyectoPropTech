@@ -59,7 +59,7 @@
                     <input type="text" class="form-control border-0" id="input-buscar-inmueble"
                         placeholder="Buscar inmueble por código"
                         onkeydown="if(event.key==='Enter') buscarInmueblePorCodigo()">
-                    <button class="btn btn-primary fw-bold px-4 rounded-pill" onclick="buscarInmueblePorCodigo()">Buscar</button>
+                    <button class="btn btn-nav active fw-bold px-4 rounded-pill" onclick="buscarInmueblePorCodigo()">Buscar</button>
                 </div>
             </div>
 
@@ -70,7 +70,7 @@
                     <input type="text" class="form-control border-0" id="input-buscar-cliente"
                         placeholder="Buscar cliente por identificación"
                         onkeydown="if(event.key==='Enter') buscarClientePorId()">
-                    <button class="btn btn-primary fw-bold px-4 rounded-pill" onclick="buscarClientePorId()">
+                    <button class="btn btn-nav active fw-bold px-4 rounded-pill" onclick="buscarClientePorId()">
                         Buscar
                     </button>
                 </div>
@@ -83,7 +83,7 @@
                     <input type="text" class="form-control border-0" id="input-buscar-operacion"
                         placeholder="Buscar operación por tipo (Venta/Arriendo)..."
                         onkeydown="if(event.key==='Enter') buscarOperacionPorTipo()">
-                    <button class="btn btn-primary fw-bold px-4 rounded-pill" onclick="buscarOperacionPorTipo()">
+                    <button class="btn btn-nav active fw-bold px-4 rounded-pill" onclick="buscarOperacionPorTipo()">
                         Buscar
                     </button>
                 </div>
@@ -122,7 +122,7 @@
                         <h2 class="fw-bold text-dark"><span style="color: var(--color-primario);">Directorio</span> de Clientes</h2>
                         <div class="d-flex gap-2">
                             <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill" id="contador-clientes">Cargando...</span>
-                            <button class="btn btn-primary rounded-pill fw-bold px-4 shadow-sm" onclick="abrirModalCliente()">
+                            <button class="btn btn-nav active rounded-pill fw-bold px-4 shadow-sm" id="btn-registrar-cliente" onclick="abrirModalCliente()">
                                 ➕ Registrar Cliente
                             </button>
                         </div>
@@ -142,7 +142,7 @@
                         <h2 class="fw-bold text-dark"><span style="color: var(--color-primario);">Gestión</span> de Operaciones</h2>
                         <div class="d-flex gap-2">
                             <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill" id="contador-operaciones">Cargando...</span>
-                            <button class="btn btn-primary rounded-pill fw-bold px-4 shadow-sm" onclick="abrirModalOperacion()">
+                            <button class="btn btn-nav active rounded-pill fw-bold px-4 shadow-sm" id="btn-nueva-operacion" onclick="abrirModalOperacion()">
                                 ➕ Nueva Operación
                             </button>
                         </div>
@@ -164,7 +164,7 @@
                             <button class="btn btn-secondary rounded-pill fw-bold px-3 shadow-sm" onclick="exportarReporte()">
                                 📄 Exportar PDF
                             </button>
-                            <button class="btn btn-primary rounded-pill fw-bold px-4 shadow-sm" onclick="cargarReportes()">
+                            <button class="btn btn-nav active rounded-pill fw-bold px-4 shadow-sm" onclick="cargarReportes()">
                                 🔄 Actualizar Reportes
                             </button>
                         </div>
@@ -259,7 +259,7 @@
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-secondary rounded-pill"
                         data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary rounded-pill fw-bold px-4"
+                    <button type="button" class="btn btn-nav active rounded-pill fw-bold px-4"
                         onclick="registrarCliente()">
                         💾 Guardar Cliente
                     </button>
@@ -310,7 +310,7 @@
                 </div>
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary rounded-pill fw-bold px-4" onclick="registrarVisita()">
+                    <button type="button" class="btn btn-nav active rounded-pill fw-bold px-4" onclick="registrarVisita()">
                         ✅ Confirmar Visita
                     </button>
                 </div>
@@ -364,7 +364,7 @@
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-secondary rounded-pill"
                         data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary rounded-pill fw-bold px-4"
+                    <button type="button" class="btn btn-nav active rounded-pill fw-bold px-4"
                         onclick="registrarOperacion()">
                         💾 Guardar Operación
                     </button>

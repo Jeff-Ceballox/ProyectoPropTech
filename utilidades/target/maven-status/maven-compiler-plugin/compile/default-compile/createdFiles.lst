@@ -39,6 +39,7 @@ com\proptech\servicio\HistorialCambiosService$RegistroCambio.class
 com\proptech\modelo\Usuario.class
 com\proptech\dao\AsesorDAO.class
 com\proptech\utilidades\estructuras\ListaEnlazada.class
+com\proptech\dao\FavoritoDAO.class
 com\proptech\servicio\RecomendacionService.class
 com\proptech\servicio\ReporteService.class
 com\proptech\servicio\HistorialCambiosService.class

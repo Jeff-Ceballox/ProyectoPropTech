@@ -8,6 +8,24 @@ function initApp() {
         const navNombre = document.getElementById('nombre-usuario-nav');
         if (navNombre) navNombre.textContent = usuario.nombre.split(' ')[0];
     }
+
+    // Ocultar secciones según rol
+    const rol = (usuario.rol || 'cliente').toLowerCase();
+    const btnOperaciones = document.getElementById('btn-nav-operaciones');
+    const btnReportes = document.getElementById('btn-nav-reportes');
+    const btnRegistrarCliente = document.getElementById('btn-registrar-cliente');
+    const btnNuevaOperacion = document.getElementById('btn-nueva-operacion');
+
+    if (rol === 'cliente') {
+        if (btnOperaciones) btnOperaciones.style.display = 'none';
+        if (btnReportes) btnReportes.style.display = 'none';
+        if (btnRegistrarCliente) btnRegistrarCliente.style.display = 'none';
+        if (btnNuevaOperacion) btnNuevaOperacion.style.display = 'none';
+    }
+
+    if (usuario.email) {
+        cargarFavoritos();
+    }
     cargarInmuebles();
 }
 
@@ -35,6 +53,9 @@ function mostrarSeccion(seccion) {
 // ---- INMUEBLES ----
 
 function cargarInmuebles() {
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    const estaLogueado = !!usuario.email;
+
     fetch('/api/inmuebles')
         .then(res => {
             if (!res.ok) throw new Error("Servidor rechazó la conexión");
@@ -53,12 +74,21 @@ function cargarInmuebles() {
                 if (inmueble.tieneParqueadero) extras.push(`🚗 Parqueo`);
                 let descripcion = inmueble.descripcion || "Propiedad exclusiva y moderna.";
 
+                const esFav = window.favoritos && window.favoritos.includes(inmueble.codigo);
+                const corazon = esFav ? '❤️' : '🤍';
+                const favActive = esFav ? 'active' : '';
+
                 const tarjeta = `
                     <div class="col-md-4 fade-in" style="animation-delay: ${idx * 0.1}s">
                         <div class="card card-proptech shadow-sm h-100">
-                            <div class="card-header-gradient text-white py-3 px-4">
-                                <h5 class="mb-1 fw-bold">${inmueble.tipo}</h5>
-                                <small class="text-white-50">📍 ${inmueble.direccion}</small>
+                            <div class="card-header-gradient text-white py-3 px-4 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="mb-1 fw-bold">${inmueble.tipo}</h5>
+                                    <small class="text-white-50">📍 ${inmueble.direccion}</small>
+                                </div>
+                                ${estaLogueado ? `
+                                <button class="btn-fav ${favActive}" onclick="toggleFavorito('${inmueble.codigo}', this)" title="Favorito">${corazon}</button>
+                                ` : ''}
                             </div>
                             <div class="card-body p-4">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -73,7 +103,7 @@ function cargarInmuebles() {
                                 </div>
                             </div>
                             <div class="card-footer bg-white border-0 p-3 text-center">
-                                <button class="btn btn-primary rounded-pill w-100 fw-bold shadow-sm"
+                                <button class="btn btn-nav active rounded-pill w-100 fw-bold shadow-sm"
                                         onclick="verDetalleInmueble('${inmueble.codigo}')">
                                     Ver Detalles
                                 </button>
@@ -93,6 +123,52 @@ function cargarInmuebles() {
                 </div>
             `;
         });
+}
+
+// ---- FAVORITOS ----
+
+window.favoritos = [];
+
+function cargarFavoritos() {
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    if (!usuario.email) return;
+    fetch(`/api/favoritos?email=${encodeURIComponent(usuario.email)}`)
+        .then(res => res.json())
+        .then(data => {
+            window.favoritos = data || [];
+        })
+        .catch(() => {});
+}
+
+function toggleFavorito(codigoInmueble, btn) {
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    if (!usuario.email) {
+        mostrarError('Debes iniciar sesión para guardar favoritos.');
+        return;
+    }
+
+    fetch(`/api/favoritos/${encodeURIComponent(codigoInmueble)}?email=${encodeURIComponent(usuario.email)}`, {
+        method: 'POST'
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.favorito) {
+            if (!window.favoritos.includes(codigoInmueble)) {
+                window.favoritos.push(codigoInmueble);
+            }
+            btn.textContent = '❤️';
+            btn.classList.add('active');
+            mostrarExito('✅ Agregado a favoritos');
+        } else {
+            window.favoritos = window.favoritos.filter(f => f !== codigoInmueble);
+            btn.textContent = '🤍';
+            btn.classList.remove('active');
+            mostrarExito('🗑 Quitado de favoritos');
+        }
+    })
+    .catch(err => {
+        mostrarError('Error al actualizar favorito: ' + err.message);
+    });
 }
 
 function buscarInmueblePorCodigo() {

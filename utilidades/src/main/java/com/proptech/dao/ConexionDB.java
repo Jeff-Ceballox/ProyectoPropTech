@@ -92,6 +92,13 @@ public class ConexionDB {
                 + "FOREIGN KEY(codigoInmueble) REFERENCES inmuebles(codigo), "
                 + "FOREIGN KEY(idAsesor) REFERENCES asesores(idAsesor)"
                 + ");";
+        String sqlFavoritos = "CREATE TABLE IF NOT EXISTS favoritos ("
+                + "identificacionCliente TEXT NOT NULL, "
+                + "codigoInmueble TEXT NOT NULL, "
+                + "PRIMARY KEY(identificacionCliente, codigoInmueble), "
+                + "FOREIGN KEY(identificacionCliente) REFERENCES clientes(identificacion), "
+                + "FOREIGN KEY(codigoInmueble) REFERENCES inmuebles(codigo)"
+                + ");";
 
         try (Connection conn = conectar(); 
              Statement stmt = conn.createStatement()) {
@@ -101,8 +108,9 @@ public class ConexionDB {
             stmt.execute(sqlClientes);
             stmt.execute(sqlAsesores);
             stmt.execute(sqlOperaciones);
-             stmt.execute(sqlVisitas);
-              System.out.println("Base de datos sincronizada: Tablas 'inmuebles', 'clientes', 'asesores', 'operaciones' y 'visitas' listas.");
+            stmt.execute(sqlVisitas);
+            stmt.execute(sqlFavoritos);
+            System.out.println("Base de datos sincronizada: Tablas 'inmuebles', 'clientes', 'asesores', 'operaciones', 'visitas' y 'favoritos' listas.");
                
           } catch (SQLException e) {
               System.out.println("Error creando las tablas: " + e.getMessage());

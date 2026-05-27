@@ -22,6 +22,7 @@ import com.proptech.modelo.Visita;
 import com.proptech.dao.ClienteDAO;
 import com.proptech.dao.InmuebleDAO;
 import com.proptech.dao.AsesorDAO;
+import com.proptech.dao.FavoritoDAO;
 
 import io.javalin.Javalin;
 import java.sql.Connection;
@@ -476,6 +477,90 @@ public class Main {
             }
             visitaService.cancelarVisita(idVisita);
             ctx.json(Map.of("mensaje", "Visita cancelada exitosamente", "idVisita", idVisita));
+        });
+
+        // --- RUTAS API DE FAVORITOS ---
+
+        FavoritoDAO favoritoDAO = new FavoritoDAO();
+
+        // Agregar o quitar favorito (toggle)
+        app.post("/api/favoritos/{codigoInmueble}", ctx -> {
+            String codigoInmueble = ctx.pathParam("codigoInmueble");
+            String email = ctx.queryParam("email");
+            if (email == null) {
+                ctx.status(400).json(Map.of("error", "Email requerido"));
+                return;
+            }
+            Cliente c = new ClienteDAO().obtenerPorEmail(email);
+            if (c == null) {
+                ctx.status(404).json(Map.of("error", "Cliente no encontrado"));
+                return;
+            }
+            boolean esFav = favoritoDAO.esFavorito(c.getIdentificacion(), codigoInmueble);
+            if (esFav) {
+                favoritoDAO.quitarFavorito(c.getIdentificacion(), codigoInmueble);
+                ctx.json(Map.of("favorito", false, "mensaje", "Favorito quitado"));
+            } else {
+                favoritoDAO.agregarFavorito(c.getIdentificacion(), codigoInmueble);
+                ctx.json(Map.of("favorito", true, "mensaje", "Favorito agregado"));
+            }
+        });
+
+        // Obtener favoritos del cliente
+        app.get("/api/favoritos", ctx -> {
+            String email = ctx.queryParam("email");
+            if (email == null) {
+                ctx.status(400).json(Map.of("error", "Email requerido"));
+                return;
+            }
+            Cliente c = new ClienteDAO().obtenerPorEmail(email);
+            if (c == null) {
+                ctx.json(new ArrayList<>());
+                return;
+            }
+            ListaEnlazada<String> codigos = favoritoDAO.obtenerFavoritos(c.getIdentificacion());
+            List<String> lista = new ArrayList<>();
+            for (int i = 0; i < codigos.getTamaño(); i++) {
+                lista.add(codigos.obtener(i));
+            }
+            ctx.json(lista);
+        });
+
+        // --- RUTAS API DE PERFIL DEL CLIENTE ---
+
+        app.put("/api/clientes/perfil", ctx -> {
+            Map<String, Object> datos = ctx.bodyAsClass(Map.class);
+            String email = (String) datos.get("email");
+            ClienteDAO cd = new ClienteDAO();
+            Cliente c = cd.obtenerPorEmail(email);
+            if (c == null) {
+                ctx.status(404).json(Map.of("error", "Cliente no encontrado"));
+                return;
+            }
+            if (datos.containsKey("nombre")) c.setNombre((String) datos.get("nombre"));
+            if (datos.containsKey("telefono")) c.setTelefono((String) datos.get("telefono"));
+            if (datos.containsKey("email") && !email.equals(datos.get("email"))) {
+                c.setEmail((String) datos.get("email"));
+            }
+            if (datos.containsKey("presupuestoMaximo")) {
+                c.setPresupuestoMaximo(((Number) datos.get("presupuestoMaximo")).doubleValue());
+            }
+            cd.actualizar(c);
+            ctx.json(Map.of("mensaje", "Perfil actualizado"));
+        });
+
+        app.get("/api/clientes/perfil", ctx -> {
+            String email = ctx.queryParam("email");
+            if (email == null) {
+                ctx.status(400).json(Map.of("error", "Email requerido"));
+                return;
+            }
+            Cliente c = new ClienteDAO().obtenerPorEmail(email);
+            if (c == null) {
+                ctx.status(404).json(Map.of("error", "Cliente no encontrado"));
+                return;
+            }
+            ctx.json(c);
         });
 
         // --- RUTAS API DE DIAGNÓSTICO ---
