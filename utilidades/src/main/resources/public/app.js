@@ -281,13 +281,23 @@ function verDetalleInmueble(codigo) {
             const footer = document.getElementById('detalle-inmueble-footer');
             if (footer) {
                 if (usuario.email) {
-                    footer.innerHTML = `
-                        <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cerrar</button>
-                        <button type="button" class="btn btn-primary rounded-pill fw-bold px-4 shadow-sm"
-                            onclick="abrirModalAgendarVisita('${inmueble.codigo}')">
-                            📅 Agendar Visita
-                        </button>
-                    `;
+                    const puedeVisitar = inmueble.estado === 'Disponible' || inmueble.estado === 'En negociación';
+                    if (puedeVisitar) {
+                        footer.innerHTML = `
+                            <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="button" class="btn btn-primary rounded-pill fw-bold px-4 shadow-sm"
+                                onclick="abrirModalAgendarVisita('${inmueble.codigo}')">
+                                📅 Agendar Visita
+                            </button>
+                        `;
+                    } else {
+                        footer.innerHTML = `
+                            <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="button" class="btn btn-secondary rounded-pill fw-bold px-4 shadow-sm" disabled>
+                                ❌ No disponible para visitas
+                            </button>
+                        `;
+                    }
                 } else {
                     footer.innerHTML = `
                         <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cerrar</button>
@@ -309,6 +319,22 @@ function abrirModalAgendarVisita(codigoInmueble) {
     if (usuario.nombre) {
         info.innerHTML = `<small>📌 La visita se registrará a nombre de <strong>${usuario.nombre}</strong> (${usuario.email}).</small>`;
     }
+
+    // Cargar lista de asesores
+    const select = document.getElementById('visita-asesor');
+    select.innerHTML = '<option value="">Cargando asesores...</option>';
+    fetch('/api/asesores')
+        .then(res => res.json())
+        .then(asesores => {
+            select.innerHTML = '<option value="">-- Seleccionar asesor --</option>';
+            asesores.forEach(a => {
+                select.innerHTML += `<option value="${a.idAsesor}">${a.nombre} (${a.especialidad || 'General'})</option>`;
+            });
+        })
+        .catch(() => {
+            select.innerHTML = '<option value="">No hay asesores disponibles</option>';
+        });
+
     new bootstrap.Modal(document.getElementById('modalAgendarVisita')).show();
 }
 
@@ -327,6 +353,12 @@ function registrarVisita() {
     }
 
     const fechaHora = fechaHoraRaw.replace('T', ' ') + ':00';
+    const idAsesor = document.getElementById('visita-asesor').value;
+
+    if (!idAsesor) {
+        mostrarError('Selecciona un asesor para la visita.');
+        return;
+    }
 
     fetch('/api/visitas', {
         method: 'POST',
@@ -334,7 +366,8 @@ function registrarVisita() {
         body: JSON.stringify({
             codigoInmueble: codigoInmueble,
             fechaHora: fechaHora,
-            emailCliente: usuario.email
+            emailCliente: usuario.email,
+            idAsesor: idAsesor
         })
     })
     .then(res => {

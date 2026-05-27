@@ -538,6 +538,12 @@ public class Main {
                 return;
             }
 
+            // No permitir visitas en inmuebles vendidos o arrendados
+            if ("Vendido".equals(inmueble.getEstado()) || "Arrendado".equals(inmueble.getEstado())) {
+                ctx.status(400).json(Map.of("error", "No puedes agendar una visita en un inmueble que ya está " + inmueble.getEstado().toLowerCase() + "."));
+                return;
+            }
+
             // Validar que no haya otra visita para el mismo inmueble con diferencia menor a 2 horas
             ListaEnlazada<Visita> visitasExistentes = visitaService.obtenerVisitasPorInmueble(codigoInmueble);
             for (int i = 0; i < visitasExistentes.getTamaño(); i++) {
@@ -550,12 +556,18 @@ public class Main {
                 }
             }
 
-            // Asignar un asesor automáticamente (el primero disponible)
+            // Asignar el asesor seleccionado por el cliente (o el primero disponible)
             AsesorDAO asesorDao = new AsesorDAO();
-            ListaEnlazada<Asesor> asesores = asesorDao.obtenerTodos();
+            String idAsesorSeleccionado = datos.get("idAsesor");
             Asesor asesor = null;
-            if (asesores.getTamaño() > 0) {
-                asesor = asesores.obtener(0);
+            if (idAsesorSeleccionado != null && !idAsesorSeleccionado.isEmpty()) {
+                asesor = asesorDao.obtenerPorId(idAsesorSeleccionado);
+            }
+            if (asesor == null) {
+                ListaEnlazada<Asesor> asesores = asesorDao.obtenerTodos();
+                if (asesores.getTamaño() > 0) {
+                    asesor = asesores.obtener(0);
+                }
             }
 
             // Generar ID único para la visita
@@ -614,6 +626,23 @@ public class Main {
                 }
             }
             ctx.json(listaParaWeb);
+        });
+
+        // Listar todos los asesores disponibles
+        app.get("/api/asesores", ctx -> {
+            AsesorDAO asesorDao = new AsesorDAO();
+            ListaEnlazada<Asesor> asesores = asesorDao.obtenerTodos();
+            List<Map<String, Object>> lista = new ArrayList<>();
+            for (int i = 0; i < asesores.getTamaño(); i++) {
+                Asesor a = asesores.obtener(i);
+                Map<String, Object> m = new java.util.HashMap<>();
+                m.put("idAsesor", a.getIdAsesor());
+                m.put("nombre", a.getNombre());
+                m.put("especialidad", a.getEspecialidad());
+                m.put("email", a.getEmail());
+                lista.add(m);
+            }
+            ctx.json(lista);
         });
 
         // Confirmar una visita (asesor confirma la cita)
