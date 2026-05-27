@@ -1,0 +1,27 @@
+<!-- Widget de Asesor IA - Fragmento para incluir en páginas -->
+<div id="chat-widget" class="chat-widget">
+    <button id="chat-toggle" class="chat-toggle-btn" title="Abrir Asesor IA">
+        🤖 Preguntar
+    </button>
+    <div id="chat-window" class="chat-window d-none">
+        <div class="chat-header">
+            <span>🤖 Asesor Virtual</span>
+            <button id="chat-close" class="chat-header-close">&times;</button>
+        </div>
+        <div id="chat-messages" class="chat-messages">
+            <div class="message bot">
+                ¡Hola! Soy el asesor virtual de <strong>Insignia Inmo</strong>.
+                Puedo ayudarte con informaci&oacute;n sobre propiedades, clientes,
+                operaciones y m&aacute;s. &iquest;En qu&eacute; te ayudo?
+            </div>
+        </div>
+        <div id="chat-typing" class="chat-typing d-none">
+            <span class="typing-dots">Escribiendo</span>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" class="chat-input"
+                   placeholder="Escribe tu pregunta sobre inmuebles, clientes...">
+            <button id="chat-send" class="chat-send-btn">Enviar</button>
+        </div>
+    </div>
+</div>

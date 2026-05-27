@@ -17,6 +17,10 @@ import com.proptech.servicio.DetectorAnomaliesService;
 import com.proptech.servicio.ReporteService;
 import com.proptech.servicio.AuthService;
 import com.proptech.servicio.VisitaService;
+import com.proptech.servicio.asesor.AiService;
+import com.proptech.servicio.asesor.AsesorService;
+import com.proptech.servicio.asesor.ChatRequest;
+import com.proptech.servicio.asesor.ChatResponse;
 import com.proptech.modelo.Usuario;
 import com.proptech.modelo.Visita;
 import com.proptech.dao.ClienteDAO;
@@ -118,6 +122,15 @@ public class Main {
 
         // 2.8 Iniciamos el servicio de visitas
         VisitaService visitaService = new VisitaService();
+
+        // 2.9 Iniciamos el Asesor IA
+        AiService aiService = new AiService();
+        AsesorService asesorService = new AsesorService(aiService, inventarioService, clientesService, operacionesService);
+        if (aiService.isConfigurado()) {
+            System.out.println("✅ Asesor IA listo en /api/chat");
+        } else {
+            System.out.println("ℹ️  Asesor IA no configurado. Define OPENROUTER_API_KEY para activarlo.");
+        }
 
         // --- DEFINICIÓN DE RUTAS (ENDPOINTS) ---
         // 3. Encendemos el Servidor Web Javalin
@@ -1141,6 +1154,26 @@ public class Main {
             } catch (SQLException e) {
                 ctx.status(500).json(Map.of("error", e.getMessage()));
             }
+        });
+
+        // --- ENDPOINT: CHAT ASESOR IA ---
+        app.post("/api/chat", ctx -> {
+            ChatRequest request = ctx.bodyAsClass(ChatRequest.class);
+            if (request.getPregunta() == null || request.getPregunta().trim().isEmpty()) {
+                ctx.status(400).json(Map.of("error", "La pregunta no puede estar vacía", "exito", false));
+                return;
+            }
+            ChatResponse response = asesorService.procesarPregunta(request);
+            ctx.json(response);
+        });
+
+        // Health check del asesor IA
+        app.get("/api/chat/health", ctx -> {
+            ctx.json(Map.of(
+                "status", asesorService.getEstado(),
+                "modelo", asesorService.getModelo(),
+                "apiKeyConfigurada", aiService.isConfigurado()
+            ));
         });
 
         System.out.println("Servidor corriendo en: http://localhost:7070");

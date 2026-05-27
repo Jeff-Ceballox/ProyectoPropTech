@@ -17,6 +17,10 @@ C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\modelo\Visita.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\AlertasService.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\AnalisisRelacionesService.java
+C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\asesor\AiService.java
+C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\asesor\AsesorService.java
+C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\asesor\ChatRequest.java
+C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\asesor\ChatResponse.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\AuthService.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\ClientesService.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\servicio\DetectorAnomaliesService.java

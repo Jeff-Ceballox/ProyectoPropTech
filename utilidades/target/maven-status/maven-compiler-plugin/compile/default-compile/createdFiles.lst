@@ -2,6 +2,8 @@ com\proptech\modelo\Inmueble.class
 com\proptech\servicio\OperacionesService.class
 com\proptech\servicio\HistorialYFavoritosService.class
 com\proptech\dao\UsuarioDAO.class
+com\proptech\servicio\asesor\AsesorService.class
+com\proptech\servicio\asesor\ChatResponse.class
 com\proptech\dao\ConexionDB.class
 com\proptech\modelo\Cliente.class
 com\proptech\utilidades\estructuras\EntradaHash.class
@@ -32,11 +34,13 @@ com\proptech\servicio\AlertasService.class
 com\proptech\utilidades\estructuras\Vertice.class
 com\proptech\utilidades\estructuras\ColaPrioridad.class
 com\proptech\Main.class
+com\proptech\servicio\asesor\AiService.class
 com\proptech\utilidades\estructuras\Pila.class
 com\proptech\servicio\GestorVisitasService.class
 com\proptech\dao\ClienteDAO.class
 com\proptech\servicio\HistorialCambiosService$RegistroCambio.class
 com\proptech\modelo\Usuario.class
+com\proptech\servicio\asesor\ChatRequest.class
 com\proptech\dao\AsesorDAO.class
 com\proptech\utilidades\estructuras\ListaEnlazada.class
 com\proptech\dao\FavoritoDAO.class
