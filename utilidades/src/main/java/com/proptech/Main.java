@@ -111,6 +111,10 @@ public class Main {
 
 // 2.7 Iniciamos el servicio de autenticación
         AuthService authService = new AuthService();
+        // Crear usuario admin por defecto si no existe
+        if (authService.login("admin@proptech.com", "admin123") == null) {
+            authService.crearAdmin("admin@proptech.com", "admin123", "Administrador");
+        }
 
         // 2.8 Iniciamos el servicio de visitas
         VisitaService visitaService = new VisitaService();
@@ -168,17 +172,68 @@ public class Main {
         // Actualizar un inmueble existente
         app.put("/api/inmuebles/{codigo}", ctx -> {
             String codigo = ctx.pathParam("codigo");
+            String email = ctx.queryParam("email");
             Inmueble existente = inventarioService.buscarPorCodigo(codigo);
             if (existente == null) {
                 ctx.status(404).json(Map.of("error", "Inmueble no encontrado: " + codigo));
                 return;
             }
+
+            // Verificar si el usuario es admin
+            boolean esAdmin = false;
+            if (email != null) {
+                UsuarioDAO userDao = new UsuarioDAO();
+                Usuario user = userDao.buscarPorEmail(email);
+                if (user != null && user.getRol() != null && Rol.ADMIN.equals(user.getRol().getNombre())) {
+                    esAdmin = true;
+                }
+            }
+
+            // Bloquear edición si el inmueble está Vendido y el usuario no es admin
+            if ("Vendido".equals(existente.getEstado()) && !esAdmin) {
+                ctx.status(403).json(Map.of("error", "No puedes modificar un inmueble vendido. Solo el administrador puede hacerlo."));
+                return;
+            }
+
             Inmueble datos = ctx.bodyAsClass(Inmueble.class);
             datos.setCodigo(codigo);
-            if (datos.getEstado() == null || datos.getEstado().isEmpty()) {
-                datos.setEstado(existente.getEstado());
+            String estadoAnterior = existente.getEstado();
+            String estadoNuevo = datos.getEstado();
+            if (estadoNuevo == null || estadoNuevo.isEmpty()) {
+                datos.setEstado(estadoAnterior);
             }
+
             inventarioService.actualizarInmueble(datos);
+
+            // Auto-crear operación si cambia a Vendido o Arrendado
+            if (estadoNuevo != null && !estadoNuevo.equals(estadoAnterior)) {
+                Asesor asesor = null;
+                if (email != null) {
+                    AsesorDAO asesorDao = new AsesorDAO();
+                    ListaEnlazada<Asesor> todos = asesorDao.obtenerTodos();
+                    for (int i = 0; i < todos.getTamaño(); i++) {
+                        Asesor a = todos.obtener(i);
+                        if (email.equals(a.getEmail())) {
+                            asesor = a;
+                            break;
+                        }
+                    }
+                }
+
+                String opId = "OP-AUTO-" + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+                String fecha = java.time.LocalDate.now().toString();
+
+                if ("Vendido".equals(estadoNuevo)) {
+                    Operacion op = new Operacion(opId, "Venta", datos, null, asesor, datos.getPrecio(), fecha);
+                    operacionesService.registrarOperacion(op);
+                    System.out.println("Operación de venta auto-creada: " + opId);
+                } else if ("Arrendado".equals(estadoNuevo)) {
+                    Operacion op = new Operacion(opId, "Arriendo", datos, null, asesor, datos.getPrecio(), fecha);
+                    operacionesService.registrarOperacion(op);
+                    System.out.println("Operación de arriendo auto-creada: " + opId);
+                }
+            }
+
             ctx.json(datos);
         });
 

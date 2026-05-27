@@ -85,9 +85,9 @@ public class OperacionDAO {
 
             pstmt.setString(1, operacion.getIdOperacion());
             pstmt.setString(2, operacion.getTipo());
-            pstmt.setString(3, operacion.getInmueble().getCodigo());
-            pstmt.setString(4, operacion.getCliente().getIdentificacion());
-            pstmt.setString(5, operacion.getAsesor().getIdAsesor());
+            pstmt.setString(3, operacion.getInmueble() != null ? operacion.getInmueble().getCodigo() : null);
+            pstmt.setString(4, operacion.getCliente() != null ? operacion.getCliente().getIdentificacion() : null);
+            pstmt.setString(5, operacion.getAsesor() != null ? operacion.getAsesor().getIdAsesor() : null);
             pstmt.setDouble(6, operacion.getMonto());
             pstmt.setString(7, operacion.getFecha());
 

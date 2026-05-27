@@ -9,6 +9,8 @@ public class Operacion {
     private double monto;
     private String fecha;
 
+    public Operacion() {}
+
     public Operacion(String idOperacion, String tipo, Inmueble inmueble, Cliente cliente, Asesor asesor, double monto, String fecha) {
         this.idOperacion = idOperacion;
         this.tipo = tipo;
@@ -43,6 +45,8 @@ public class Operacion {
 
     @Override
     public String toString() {
-        return tipo + " | " + inmueble.getCodigo() + " | Cliente: " + cliente.getNombre() + " | Asesor: " + asesor.getNombre() + " | $" + monto + "M";
+        String nomCliente = cliente != null ? cliente.getNombre() : "Desconocido";
+        String nomAsesor = asesor != null ? asesor.getNombre() : "Desconocido";
+        return tipo + " | " + (inmueble != null ? inmueble.getCodigo() : "N/A") + " | Cliente: " + nomCliente + " | Asesor: " + nomAsesor + " | $" + monto + "M";
     }
 }

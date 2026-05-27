@@ -757,6 +757,7 @@ function editarInmueble(codigo) {
 
 function guardarInmuebleEditado() {
     const codigo = document.getElementById('edit-inm-codigo-original').value;
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
     const datos = {
         codigo: codigo,
         tipo: document.getElementById('edit-inm-tipo').value,
@@ -770,13 +771,15 @@ function guardarInmuebleEditado() {
         descripcion: document.getElementById('edit-inm-descripcion').value
     };
 
-    fetch(`/api/inmuebles/${encodeURIComponent(codigo)}`, {
+    const params = usuario.email ? `?email=${encodeURIComponent(usuario.email)}` : '';
+
+    fetch(`/api/inmuebles/${encodeURIComponent(codigo)}${params}`, {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(datos)
     })
     .then(res => {
-        if (!res.ok) throw new Error('Error al actualizar');
+        if (!res.ok) return res.json().then(err => { throw new Error(err.error || 'Error al actualizar'); });
         return res.json();
     })
     .then(data => {
@@ -950,7 +953,7 @@ function registrarCliente() {
     };
 
     if (!datos.identificacion || !datos.nombre) {
-        alert('Identificación y nombre son obligatorios.');
+        mostrarError('Identificación y nombre son obligatorios.');
         return;
     }
 
@@ -973,7 +976,7 @@ function registrarCliente() {
         cargarClientes();
     })
     .catch(err => {
-        alert('Error al registrar cliente: ' + err.message);
+        mostrarError('Error al registrar cliente: ' + err.message);
     });
 }
 
