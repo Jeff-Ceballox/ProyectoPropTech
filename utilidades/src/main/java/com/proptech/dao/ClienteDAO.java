@@ -55,6 +55,30 @@ public class ClienteDAO {
     }
 
     /**
+     * Obtiene un cliente por su email.
+     */
+    public Cliente obtenerPorEmail(String email) {
+        String sql = "SELECT * FROM clientes WHERE email = ?";
+        try (Connection conn = ConexionDB.conectar();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, email);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return new Cliente(
+                    rs.getString("identificacion"),
+                    rs.getString("nombre"),
+                    rs.getString("telefono"),
+                    rs.getDouble("presupuestoMaximo"),
+                    rs.getString("email")
+                );
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al obtener cliente por email: " + e.getMessage());
+        }
+        return null;
+    }
+
+    /**
      * Obtiene todos los clientes registrados.
      */
     public ListaEnlazada<Cliente> obtenerTodos() {

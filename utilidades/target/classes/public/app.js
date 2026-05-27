@@ -168,9 +168,172 @@ function verDetalleInmueble(codigo) {
                 <p class="text-muted">${descripcion}</p>
             `;
 
+            const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+            const footer = document.getElementById('detalle-inmueble-footer');
+            if (footer) {
+                if (usuario.email) {
+                    footer.innerHTML = `
+                        <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-primary rounded-pill fw-bold px-4 shadow-sm"
+                            onclick="abrirModalAgendarVisita('${inmueble.codigo}')">
+                            📅 Agendar Visita
+                        </button>
+                    `;
+                } else {
+                    footer.innerHTML = `
+                        <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cerrar</button>
+                    `;
+                }
+            }
+
             new bootstrap.Modal(document.getElementById('modalDetalleInmueble')).show();
         })
         .catch(err => console.error('Error al cargar detalle:', err));
+}
+
+// ---- AGENDAR VISITA ----
+
+function abrirModalAgendarVisita(codigoInmueble) {
+    document.getElementById('visita-inmueble-codigo').value = codigoInmueble;
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    const info = document.getElementById('visita-cliente-info');
+    if (usuario.nombre) {
+        info.innerHTML = `<small>📌 La visita se registrará a nombre de <strong>${usuario.nombre}</strong> (${usuario.email}).</small>`;
+    }
+    new bootstrap.Modal(document.getElementById('modalAgendarVisita')).show();
+}
+
+function registrarVisita() {
+    const codigoInmueble = document.getElementById('visita-inmueble-codigo').value.trim();
+    const fechaHoraRaw = document.getElementById('visita-fecha').value;
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+
+    if (!codigoInmueble || !fechaHoraRaw) {
+        mostrarError('Selecciona una fecha y hora para la visita.');
+        return;
+    }
+    if (!usuario.email) {
+        mostrarError('Debes iniciar sesión para agendar una visita.');
+        return;
+    }
+
+    const fechaHora = fechaHoraRaw.replace('T', ' ') + ':00';
+
+    fetch('/api/visitas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            codigoInmueble: codigoInmueble,
+            fechaHora: fechaHora,
+            emailCliente: usuario.email
+        })
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Error al programar la visita');
+        return res.json();
+    })
+    .then(data => {
+        bootstrap.Modal.getInstance(document.getElementById('modalAgendarVisita')).hide();
+        document.getElementById('visita-fecha').value = '';
+        mostrarExito('✅ Visita programada para el ' + data.fechaHora);
+    })
+    .catch(err => {
+        mostrarError('Error al agendar visita: ' + err.message);
+    });
+}
+
+// ---- MIS VISITAS ----
+
+function mostrarMisVisitas() {
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    if (!usuario.email) {
+        mostrarError('Debes iniciar sesión para ver tus visitas.');
+        return;
+    }
+
+    mostrarSeccion('inmuebles');
+
+    const contenedor = document.getElementById('contenedor-inmuebles');
+    contenedor.innerHTML = '<div class="text-center text-muted"><div class="spinner-border text-primary mb-2"></div><p>Cargando tus visitas...</p></div>';
+    document.getElementById('contador-inmuebles').textContent = 'Mis Visitas';
+
+    fetch(`/api/visitas/cliente/${encodeURIComponent(usuario.email)}`)
+        .then(res => res.json())
+        .then(visitas => {
+            contenedor.innerHTML = '';
+            document.getElementById('contador-inmuebles').textContent = visitas.length + ' visita(s)';
+
+            if (visitas.length === 0) {
+                contenedor.innerHTML = `
+                    <div class="col-12 text-center text-muted py-5">
+                        <h4>📅 No tienes visitas agendadas</h4>
+                        <p>Busca un inmueble y agenda una cita para verlo.</p>
+                    </div>`;
+                return;
+            }
+
+            visitas.forEach((v, idx) => {
+                const colorEstado = v.estado === 'Pendiente' ? 'bg-warning text-dark' :
+                                    v.estado === 'Realizada' ? 'bg-success' : 'bg-secondary';
+                const puedeCancelar = v.estado === 'Pendiente';
+
+                const tarjeta = `
+                    <div class="col-md-6 fade-in" style="animation-delay: ${idx * 0.1}s">
+                        <div class="card card-proptech shadow-sm h-100">
+                            <div class="card-header-gradient text-white py-3 px-4">
+                                <h5 class="mb-1 fw-bold">📅 ${v.fechaHora}</h5>
+                                <small class="text-white-50">ID: ${v.idVisita}</small>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge ${colorEstado} rounded-pill px-3 py-1">${v.estado}</span>
+                                </div>
+                                <hr class="my-3">
+                                <div class="d-flex flex-column gap-2 small">
+                                    <span>🏠 Inmueble: ${v.inmueble ? v.inmueble.tipo + ' (' + v.inmueble.codigo + ')' : v.codigoInmueble}</span>
+                                    <span>📍 ${v.inmueble ? v.inmueble.direccion : ''}</span>
+                                    <span>💼 Asesor: ${v.asesor ? v.asesor.nombre : 'Por asignar'}</span>
+                                </div>
+                            </div>
+                            ${puedeCancelar ? `
+                            <div class="card-footer bg-white border-0 p-3 text-center">
+                                <button class="btn btn-outline-danger rounded-pill fw-bold px-4"
+                                    onclick="cancelarVisita('${v.idVisita}')">
+                                    🗑 Cancelar Visita
+                                </button>
+                            </div>` : ''}
+                        </div>
+                    </div>
+                `;
+                contenedor.innerHTML += tarjeta;
+            });
+        })
+        .catch(err => {
+            contenedor.innerHTML = `
+                <div class="alert alert-danger text-center w-100 shadow-sm rounded-4">
+                    <h5>❌ Error</h5>
+                    <p>No se pudieron cargar tus visitas.</p>
+                </div>`;
+        });
+}
+
+function cancelarVisita(idVisita) {
+    if (!confirm('¿Estás seguro de cancelar esta visita?')) return;
+
+    fetch(`/api/visitas/${encodeURIComponent(idVisita)}/cancelar`, {
+        method: 'PUT'
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Error al cancelar');
+        return res.json();
+    })
+    .then(data => {
+        mostrarExito('✅ Visita cancelada exitosamente');
+        mostrarMisVisitas();
+    })
+    .catch(err => {
+        mostrarError('Error al cancelar visita: ' + err.message);
+    });
 }
 
 // ---- CLIENTES ----
@@ -195,7 +358,7 @@ function cargarClientes() {
                 return;
             }
 
-clientes.forEach((cliente, idx) => {
+            clientes.forEach((cliente, idx) => {
                 const iniciales = cliente.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
                 const colores = ['var(--color-primario)', 'var(--color-secundario)'];
                 const color = colores[idx % colores.length];
@@ -214,20 +377,35 @@ clientes.forEach((cliente, idx) => {
                                 </div>
                             </div>
                             <div class="card-body p-4">
-                                    <div class="budget-tag mb-2">$${cliente.presupuestoMaximo}M</div>
-                                    <p class="text-muted small mb-1">Presupuesto máximo</p>
-                                    <hr class="my-3">
-                                    <div class="d-flex flex-column gap-2 small">
-                                        <span>📞 ${cliente.telefono}</span>
-                                        <span>📧 ${cliente.email}</span>
-                                    </div>
+                                <div class="budget-tag mb-2">$${cliente.presupuestoMaximo}M</div>
+                                <p class="text-muted small mb-1">Presupuesto máximo</p>
+                                <hr class="my-3">
+                                <div class="d-flex flex-column gap-2 small">
+                                    <span>📞 ${cliente.telefono}</span>
+                                    <span>📧 ${cliente.email}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 `;
                 contenedor.innerHTML += tarjeta;
-            });;
+            });
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            document.getElementById('contenedor-clientes').innerHTML = `
+                <div class="alert alert-danger text-center w-100 shadow-sm rounded-4">
+                    <h5>❌ Error de conexión</h5>
+                    <p>No se pudo conectar con el servidor. Verifica que Java esté corriendo.</p>
+                </div>
+            `;
+        });
+}
+
+function buscarClientePorId(id) {
+    if (!id) {
+        id = document.getElementById('input-buscar-cliente').value.trim();
+    }
     if (!id) return;
 
     const resultDiv = document.getElementById('resultado-busqueda');
@@ -723,14 +901,3 @@ function mostrarExito(mensaje) {
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 3000);
 }
-
-function initApp() {
-    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
-    if (usuario.nombre) {
-        const navNombre = document.getElementById('nombre-usuario-nav');
-        if (navNombre) navNombre.textContent = usuario.nombre.split(' ')[0];
-    }
-    cargarInmuebles();
-}
-
-document.addEventListener("DOMContentLoaded", initApp);

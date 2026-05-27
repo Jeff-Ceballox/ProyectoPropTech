@@ -5,6 +5,7 @@ import com.proptech.modelo.Inmueble;
 import com.proptech.modelo.Cliente;
 import com.proptech.modelo.Operacion;
 import com.proptech.modelo.Alerta;
+import com.proptech.modelo.Asesor;
 import com.proptech.utilidades.estructuras.ListaEnlazada;
 
 import com.proptech.servicio.InventarioInmueblesService;
@@ -15,7 +16,12 @@ import com.proptech.servicio.RecomendacionService;
 import com.proptech.servicio.DetectorAnomaliesService;
 import com.proptech.servicio.ReporteService;
 import com.proptech.servicio.AuthService;
+import com.proptech.servicio.VisitaService;
 import com.proptech.modelo.Usuario;
+import com.proptech.modelo.Visita;
+import com.proptech.dao.ClienteDAO;
+import com.proptech.dao.InmuebleDAO;
+import com.proptech.dao.AsesorDAO;
 
 import io.javalin.Javalin;
 import java.sql.Connection;
@@ -25,6 +31,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.Duration;
 
 public class Main {
     public static void main(String[] args) {
@@ -68,6 +77,26 @@ public class Main {
         // 2.3 Iniciamos el servicio de operaciones
         OperacionesService operacionesService = new OperacionesService();
 
+        // 2.3.1 Sembrar asesores de prueba si no existen
+        com.proptech.dao.AsesorDAO asesorDAO = new com.proptech.dao.AsesorDAO();
+        if (asesorDAO.obtenerPorId("ASESOR-001") == null) {
+            asesorDAO.guardar(new Asesor("ASESOR-001", "Carlos M\u00e9ndez", "Ventas Comerciales", "carlos@email.com", "300-555-0001"));
+            asesorDAO.guardar(new Asesor("ASESOR-002", "Ana L\u00f3pez", "Arriendos Residenciales", "ana@email.com", "300-555-0002"));
+            System.out.println("Asesores de prueba creados.");
+        }
+
+        // 2.3.2 Sembrar operaciones de prueba si no existen
+        if (operacionesService.buscarPorId("OP-001") == null) {
+            Inmueble inm = inventarioService.buscarPorCodigo("WEB-001");
+            Cliente cli = clientesService.buscarPorIdentificacion("CC-1001");
+            if (inm != null && cli != null) {
+                operacionesService.registrarOperacion(new Operacion("OP-001", "Venta", inm, cli,
+                    new Asesor("ASESOR-001", "Carlos M\u00e9ndez", "Ventas Comerciales", "carlos@email.com", "300-555-0001"),
+                    500.0, "2026-05-20"));
+                System.out.println("Operaci\u00f3n de prueba OP-001 creada.");
+            }
+        }
+
         // 2.4 Iniciamos el servicio de recomendación
         RecomendacionService recomendacionService = new RecomendacionService();
 
@@ -79,6 +108,9 @@ public class Main {
 
 // 2.7 Iniciamos el servicio de autenticación
         AuthService authService = new AuthService();
+
+        // 2.8 Iniciamos el servicio de visitas
+        VisitaService visitaService = new VisitaService();
 
         // --- DEFINICIÓN DE RUTAS (ENDPOINTS) ---
         // 3. Encendemos el Servidor Web Javalin
@@ -100,7 +132,7 @@ public class Main {
         });
 
         app.get("/api/inmuebles", ctx -> {
-            ListaEnlazada<Inmueble> guardados = new com.proptech.dao.InmuebleDAO().obtenerTodos();
+            ListaEnlazada<Inmueble> guardados = inventarioService.obtenerTodos();
             List<Inmueble> listaParaWeb = new ArrayList<>();
             for (int i = 0; i < guardados.getTamaño(); i++) {
                 listaParaWeb.add(guardados.obtener(i));
@@ -118,6 +150,16 @@ public class Main {
             } else {
                 ctx.status(404).result("Inmueble no encontrado");
             }
+        });
+
+        // Registrar un nuevo inmueble (persiste en SQLite + indexa en estructuras)
+        app.post("/api/inmuebles", ctx -> {
+            Inmueble nuevo = ctx.bodyAsClass(Inmueble.class);
+            if (nuevo.getEstado() == null || nuevo.getEstado().isEmpty()) {
+                nuevo.setEstado("Disponible");
+            }
+            inventarioService.registrarInmueble(nuevo);
+            ctx.status(201).json(nuevo);
         });
 
         // Ruta de prueba para Alertas
@@ -342,6 +384,100 @@ public class Main {
             ctx.json(reporte);
         });
 
+        // --- RUTAS API DE VISITAS ---
+
+        // Programar una nueva visita (cliente agenda cita para ver un inmueble)
+        app.post("/api/visitas", ctx -> {
+            Map<String, String> datos = ctx.bodyAsClass(Map.class);
+            String codigoInmueble = datos.get("codigoInmueble");
+            String fechaHora = datos.get("fechaHora");
+            String emailCliente = datos.get("emailCliente");
+
+            if (codigoInmueble == null || fechaHora == null || emailCliente == null) {
+                ctx.status(400).json(Map.of("error", "Faltan campos requeridos: codigoInmueble, fechaHora, emailCliente"));
+                return;
+            }
+
+            // Buscar cliente por email, si no existe lo crea automáticamente
+            ClienteDAO cliDAO = new ClienteDAO();
+            Cliente cliente = cliDAO.obtenerPorEmail(emailCliente);
+            if (cliente == null) {
+                String idCliente = "CLI-" + System.currentTimeMillis();
+                cliente = new Cliente(idCliente, emailCliente.split("@")[0], "", 0, emailCliente);
+                cliDAO.guardar(cliente);
+                System.out.println("Cliente creado automáticamente para email: " + emailCliente);
+            }
+
+            // Buscar inmueble por código
+            Inmueble inmueble = inventarioService.buscarPorCodigo(codigoInmueble);
+            if (inmueble == null) {
+                ctx.status(404).json(Map.of("error", "Inmueble no encontrado: " + codigoInmueble));
+                return;
+            }
+
+            // Validar que no haya otra visita para el mismo inmueble con diferencia menor a 2 horas
+            ListaEnlazada<Visita> visitasExistentes = visitaService.obtenerVisitasPorInmueble(codigoInmueble);
+            for (int i = 0; i < visitasExistentes.getTamaño(); i++) {
+                Visita v = visitasExistentes.obtener(i);
+                if ("Cancelada".equals(v.getEstado())) continue;
+                String fechaExistente = v.getFechaHora();
+                if (fechasConConflicto(fechaHora, fechaExistente)) {
+                    ctx.status(409).json(Map.of("error", "Ya existe una visita programada para este inmueble con diferencia menor a 2 horas: " + fechaExistente));
+                    return;
+                }
+            }
+
+            // Asignar un asesor automáticamente (el primero disponible)
+            AsesorDAO asesorDao = new AsesorDAO();
+            ListaEnlazada<Asesor> asesores = asesorDao.obtenerTodos();
+            Asesor asesor = null;
+            if (asesores.getTamaño() > 0) {
+                asesor = asesores.obtener(0);
+            }
+
+            // Generar ID único para la visita
+            String idVisita = "VIS-" + System.currentTimeMillis();
+
+            Visita visita = new Visita(idVisita, cliente, inmueble, asesor, fechaHora);
+            visitaService.programarVisita(visita);
+
+            ctx.status(201).json(Map.of(
+                "idVisita", idVisita,
+                "mensaje", "Visita programada exitosamente",
+                "fechaHora", fechaHora,
+                "estado", "Pendiente"
+            ));
+        });
+
+        // Obtener visitas de un cliente por email
+        app.get("/api/visitas/cliente/{email}", ctx -> {
+            String email = ctx.pathParam("email");
+            ClienteDAO cliDAO = new ClienteDAO();
+            Cliente cliente = cliDAO.obtenerPorEmail(email);
+            if (cliente == null) {
+                ctx.json(new ArrayList<>());
+                return;
+            }
+            ListaEnlazada<Visita> visitas = visitaService.obtenerVisitasPorCliente(cliente.getIdentificacion());
+            List<Visita> listaParaWeb = new ArrayList<>();
+            for (int i = 0; i < visitas.getTamaño(); i++) {
+                listaParaWeb.add(visitas.obtener(i));
+            }
+            ctx.json(listaParaWeb);
+        });
+
+        // Cancelar una visita (cliente cancela su cita)
+        app.put("/api/visitas/{idVisita}/cancelar", ctx -> {
+            String idVisita = ctx.pathParam("idVisita");
+            Visita v = visitaService.buscarPorId(idVisita);
+            if (v == null) {
+                ctx.status(404).json(Map.of("error", "Visita no encontrada: " + idVisita));
+                return;
+            }
+            visitaService.cancelarVisita(idVisita);
+            ctx.json(Map.of("mensaje", "Visita cancelada exitosamente", "idVisita", idVisita));
+        });
+
         // --- RUTAS API DE DIAGNÓSTICO ---
         app.get("/api/diagnostico/usuarios", ctx -> {
             try (Connection conn = ConexionDB.conectar()) {
@@ -447,5 +583,17 @@ public class Main {
         });
 
         System.out.println("Servidor corriendo en: http://localhost:7070");
+    }
+
+    private static boolean fechasConConflicto(String fecha1, String fecha2) {
+        try {
+            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            LocalDateTime dt1 = LocalDateTime.parse(fecha1, fmt);
+            LocalDateTime dt2 = LocalDateTime.parse(fecha2, fmt);
+            long diffHoras = Math.abs(Duration.between(dt1, dt2).toHours());
+            return diffHoras < 2;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
