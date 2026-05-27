@@ -31,6 +31,9 @@
                 <button class="btn btn-nav rounded-pill fw-bold px-3" onclick="mostrarSeccion('reportes')" id="btn-nav-reportes">
                     📊 Reportes
                 </button>
+                <button class="btn btn-nav rounded-pill fw-bold px-3" onclick="mostrarSeccion('pendientes')" id="btn-nav-pendientes" style="display:none;">
+                    ⏳ Pendientes
+                </button>
                 <div class="dropdown">
                     <button class="btn btn-nav dropdown-toggle d-flex align-items-center rounded-pill fw-bold px-3" type="button" id="dropdownPerfil" data-bs-toggle="dropdown">
                         <span id="nombre-usuario-nav">Perfil</span>
@@ -215,6 +218,21 @@
                 <div class="text-center text-muted">
                     <div class="spinner-border text-primary mb-2" role="status"></div>
                     <p>Cargando reportes...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN PENDIENTES (ADMIN) -->
+        <div id="seccion-pendientes" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark"><span style="color: var(--color-primario);">Aprobaciones</span> Pendientes</h2>
+                <button class="btn btn-nav active rounded-pill fw-bold px-4 shadow-sm" onclick="cargarPendientes()">
+                    🔄 Actualizar
+                </button>
+            </div>
+            <div id="contenedor-pendientes">
+                <div class="text-center text-muted">
+                    <p>Cargando cambios pendientes...</p>
                 </div>
             </div>
         </div>

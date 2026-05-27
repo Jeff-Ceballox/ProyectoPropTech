@@ -55,7 +55,15 @@
                 });
                 const data = await response.json();
                 if (response.ok) {
-                    const usuario = {email: email, nombre: data.nombre, rol: data.rol};
+                    const usuario = {
+                        email: data.email || email,
+                        nombre: data.nombre || '',
+                        rol: data.rol || 'cliente',
+                        telefono: data.telefono || '',
+                        direccion: data.direccion || '',
+                        intereses: data.intereses || '',
+                        fotoPerfil: data.fotoPerfil || ''
+                    };
                     localStorage.setItem('usuario', JSON.stringify(usuario));
                     alert('¡Login exitoso! Bienvenido ' + data.nombre);
                     window.location.href = 'index.html';

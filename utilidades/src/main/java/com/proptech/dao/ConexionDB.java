@@ -99,10 +99,21 @@ public class ConexionDB {
                 + "FOREIGN KEY(identificacionCliente) REFERENCES clientes(identificacion), "
                 + "FOREIGN KEY(codigoInmueble) REFERENCES inmuebles(codigo)"
                 + ");";
+        String sqlCambiosPendientes = "CREATE TABLE IF NOT EXISTS cambios_pendientes ("
+                + "id_cambio INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + "email_usuario TEXT NOT NULL, "
+                + "campo TEXT NOT NULL, "
+                + "valor_anterior TEXT, "
+                + "valor_nuevo TEXT NOT NULL, "
+                + "estado TEXT NOT NULL DEFAULT 'pendiente', "
+                + "fecha_solicitud TEXT NOT NULL, "
+                + "fecha_revision TEXT, "
+                + "revisado_por TEXT"
+                + ");";
 
         try (Connection conn = conectar(); 
              Statement stmt = conn.createStatement()) {
-             
+              
             // Crear tablas
             stmt.execute(sqlInmuebles);
             stmt.execute(sqlClientes);
@@ -110,7 +121,8 @@ public class ConexionDB {
             stmt.execute(sqlOperaciones);
             stmt.execute(sqlVisitas);
             stmt.execute(sqlFavoritos);
-            System.out.println("Base de datos sincronizada: Tablas 'inmuebles', 'clientes', 'asesores', 'operaciones', 'visitas' y 'favoritos' listas.");
+            stmt.execute(sqlCambiosPendientes);
+            System.out.println("Base de datos sincronizada: Tablas 'inmuebles', 'clientes', 'asesores', 'operaciones', 'visitas', 'favoritos' y 'cambios_pendientes' listas.");
                
           } catch (SQLException e) {
               System.out.println("Error creando las tablas: " + e.getMessage());

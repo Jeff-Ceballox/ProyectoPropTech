@@ -611,7 +611,16 @@ public class Main {
             
             Usuario usuario = authService.login(email, password);
             if (usuario != null) {
-                ctx.json(Map.of("mensaje", "Login exitoso", "rol", usuario.getRol().getNombre(), "nombre", usuario.getNombre()));
+                Map<String, Object> resp = new java.util.HashMap<>();
+                resp.put("mensaje", "Login exitoso");
+                resp.put("rol", usuario.getRol().getNombre());
+                resp.put("nombre", usuario.getNombre());
+                resp.put("telefono", usuario.getTelefono());
+                resp.put("direccion", usuario.getDireccion());
+                resp.put("intereses", usuario.getIntereses());
+                resp.put("fotoPerfil", usuario.getFotoPerfil());
+                resp.put("email", usuario.getEmail());
+                ctx.json(resp);
             } else {
                 ctx.status(401).json(Map.of("error", "Credenciales inválidas"));
             }
@@ -643,7 +652,10 @@ public class Main {
             }
         });
         
-        // Actualizar perfil
+        // Actualizar perfil de usuario
+        // - intereses y fotoPerfil: se actualizan al instante
+        // - nombre, telefono, direccion: crean cambio_pendiente (aprobación admin requerida)
+        // - si el usuario es ADMIN, todos los campos se aplican directamente
         app.put("/api/usuario/actualizar", ctx -> {
             Map<String, Object> datos = ctx.bodyAsClass(Map.class);
             String email = (String) datos.get("email");
@@ -654,16 +666,199 @@ public class Main {
                 return;
             }
             
-            if (datos.containsKey("nombre")) usuario.setNombre((String) datos.get("nombre"));
-            if (datos.containsKey("telefono")) usuario.setTelefono((String) datos.get("telefono"));
-            if (datos.containsKey("direccion")) usuario.setDireccion((String) datos.get("direccion"));
-            if (datos.containsKey("intereses")) usuario.setIntereses((String) datos.get("intereses"));
-            if (datos.containsKey("fotoPerfil")) usuario.setFotoPerfil((String) datos.get("fotoPerfil"));
+            boolean esAdmin = "admin".equalsIgnoreCase(usuario.getRol().getNombre());
+            List<String> cambiosPendientes = new ArrayList<>();
+            boolean hayCambioDirecto = false;
             
-            if (authService.actualizarPerfil(usuario)) {
-                ctx.json(Map.of("mensaje", "Perfil actualizado"));
+            String intereses = (String) datos.get("intereses");
+            String fotoPerfil = (String) datos.get("fotoPerfil");
+            String nombre = (String) datos.get("nombre");
+            String telefono = (String) datos.get("telefono");
+            String direccion = (String) datos.get("direccion");
+            
+            // Actualizar intereses directamente
+            if (intereses != null) {
+                usuario.setIntereses(intereses);
+                hayCambioDirecto = true;
+            }
+            
+            // Actualizar foto directamente
+            if (fotoPerfil != null) {
+                usuario.setFotoPerfil(fotoPerfil);
+                hayCambioDirecto = true;
+            }
+            
+            if (esAdmin) {
+                // Admin: todos los campos se aplican directamente
+                if (nombre != null) usuario.setNombre(nombre);
+                if (telefono != null) usuario.setTelefono(telefono);
+                if (direccion != null) usuario.setDireccion(direccion);
+                hayCambioDirecto = true;
             } else {
-                ctx.status(500).json(Map.of("error", "Error al actualizar"));
+                // Cliente: nombre, telefono, direccion van a pendientes
+                String fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                
+                if (nombre != null && !nombre.equals(usuario.getNombre())) {
+                    try (Connection conn = ConexionDB.conectar();
+                         PreparedStatement pstmt = conn.prepareStatement(
+                            "INSERT INTO cambios_pendientes (email_usuario, campo, valor_anterior, valor_nuevo, estado, fecha_solicitud) VALUES (?, ?, ?, ?, 'pendiente', ?)")) {
+                        pstmt.setString(1, email);
+                        pstmt.setString(2, "nombre");
+                        pstmt.setString(3, usuario.getNombre());
+                        pstmt.setString(4, nombre);
+                        pstmt.setString(5, fecha);
+                        pstmt.executeUpdate();
+                        cambiosPendientes.add("nombre");
+                    } catch (SQLException e) {
+                        System.err.println("Error creando cambio pendiente: " + e.getMessage());
+                    }
+                }
+                
+                if (telefono != null && !telefono.equals(usuario.getTelefono())) {
+                    try (Connection conn = ConexionDB.conectar();
+                         PreparedStatement pstmt = conn.prepareStatement(
+                            "INSERT INTO cambios_pendientes (email_usuario, campo, valor_anterior, valor_nuevo, estado, fecha_solicitud) VALUES (?, ?, ?, ?, 'pendiente', ?)")) {
+                        pstmt.setString(1, email);
+                        pstmt.setString(2, "telefono");
+                        pstmt.setString(3, usuario.getTelefono());
+                        pstmt.setString(4, telefono);
+                        pstmt.setString(5, fecha);
+                        pstmt.executeUpdate();
+                        cambiosPendientes.add("telefono");
+                    } catch (SQLException e) {
+                        System.err.println("Error creando cambio pendiente: " + e.getMessage());
+                    }
+                }
+                
+                if (direccion != null && !direccion.equals(usuario.getDireccion())) {
+                    try (Connection conn = ConexionDB.conectar();
+                         PreparedStatement pstmt = conn.prepareStatement(
+                            "INSERT INTO cambios_pendientes (email_usuario, campo, valor_anterior, valor_nuevo, estado, fecha_solicitud) VALUES (?, ?, ?, ?, 'pendiente', ?)")) {
+                        pstmt.setString(1, email);
+                        pstmt.setString(2, "direccion");
+                        pstmt.setString(3, usuario.getDireccion());
+                        pstmt.setString(4, direccion);
+                        pstmt.setString(5, fecha);
+                        pstmt.executeUpdate();
+                        cambiosPendientes.add("direccion");
+                    } catch (SQLException e) {
+                        System.err.println("Error creando cambio pendiente: " + e.getMessage());
+                    }
+                }
+            }
+            
+            // Guardar cambios directos (intereses, foto, o campos admin)
+            if (hayCambioDirecto) {
+                authService.actualizarPerfil(usuario);
+            }
+            
+            Map<String, Object> respuesta = new java.util.HashMap<>();
+            respuesta.put("mensaje", "Perfil actualizado");
+            if (!cambiosPendientes.isEmpty()) {
+                respuesta.put("pendientes", cambiosPendientes);
+                respuesta.put("mensaje", "Intereses y foto actualizados. Los demás cambios quedaron pendientes de aprobación del administrador.");
+            }
+            ctx.json(respuesta);
+        });
+        
+        // --- RUTAS API DE ADMIN: CAMBIOS PENDIENTES ---
+        
+        // Obtener todos los cambios pendientes
+        app.get("/api/admin/cambios-pendientes", ctx -> {
+            List<Map<String, Object>> lista = new ArrayList<>();
+            try (Connection conn = ConexionDB.conectar();
+                 PreparedStatement stmt = conn.prepareStatement(
+                    "SELECT cp.*, u.nombre as nombre_usuario FROM cambios_pendientes cp " +
+                    "JOIN usuarios u ON cp.email_usuario = u.email " +
+                    "WHERE cp.estado = 'pendiente' ORDER BY cp.fecha_solicitud DESC")) {
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    Map<String, Object> item = new java.util.HashMap<>();
+                    item.put("id", rs.getInt("id_cambio"));
+                    item.put("email", rs.getString("email_usuario"));
+                    item.put("nombreUsuario", rs.getString("nombre_usuario"));
+                    item.put("campo", rs.getString("campo"));
+                    item.put("valorAnterior", rs.getString("valor_anterior"));
+                    item.put("valorNuevo", rs.getString("valor_nuevo"));
+                    item.put("fechaSolicitud", rs.getString("fecha_solicitud"));
+                    lista.add(item);
+                }
+            } catch (SQLException e) {
+                ctx.status(500).json(Map.of("error", e.getMessage()));
+                return;
+            }
+            ctx.json(lista);
+        });
+        
+        // Aprobar un cambio pendiente
+        app.put("/api/admin/cambios-pendientes/{id}/aprobar", ctx -> {
+            int idCambio = Integer.parseInt(ctx.pathParam("id"));
+            String emailAdmin = ctx.queryParam("adminEmail");
+            
+            try (Connection conn = ConexionDB.conectar()) {
+                // Obtener el cambio pendiente
+                PreparedStatement getStmt = conn.prepareStatement(
+                    "SELECT * FROM cambios_pendientes WHERE id_cambio = ? AND estado = 'pendiente'");
+                getStmt.setInt(1, idCambio);
+                ResultSet rs = getStmt.executeQuery();
+                if (!rs.next()) {
+                    ctx.status(404).json(Map.of("error", "Cambio pendiente no encontrado"));
+                    return;
+                }
+                
+                String emailUsuario = rs.getString("email_usuario");
+                String campo = rs.getString("campo");
+                String valorNuevo = rs.getString("valor_nuevo");
+                
+                // Aplicar el cambio al usuario
+                Usuario usuario = authService.obtenerPerfil(emailUsuario);
+                if (usuario == null) {
+                    ctx.status(404).json(Map.of("error", "Usuario no encontrado"));
+                    return;
+                }
+                
+                switch (campo) {
+                    case "nombre": usuario.setNombre(valorNuevo); break;
+                    case "telefono": usuario.setTelefono(valorNuevo); break;
+                    case "direccion": usuario.setDireccion(valorNuevo); break;
+                }
+                authService.actualizarPerfil(usuario);
+                
+                // Marcar como aprobado
+                String fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                PreparedStatement updateStmt = conn.prepareStatement(
+                    "UPDATE cambios_pendientes SET estado = 'aprobado', fecha_revision = ?, revisado_por = ? WHERE id_cambio = ?");
+                updateStmt.setString(1, fecha);
+                updateStmt.setString(2, emailAdmin);
+                updateStmt.setInt(3, idCambio);
+                updateStmt.executeUpdate();
+                
+                ctx.json(Map.of("mensaje", "Cambio aprobado y aplicado", "campo", campo, "email", emailUsuario));
+            } catch (SQLException e) {
+                ctx.status(500).json(Map.of("error", e.getMessage()));
+            }
+        });
+        
+        // Rechazar un cambio pendiente
+        app.put("/api/admin/cambios-pendientes/{id}/rechazar", ctx -> {
+            int idCambio = Integer.parseInt(ctx.pathParam("id"));
+            String emailAdmin = ctx.queryParam("adminEmail");
+            
+            try (Connection conn = ConexionDB.conectar()) {
+                String fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                PreparedStatement stmt = conn.prepareStatement(
+                    "UPDATE cambios_pendientes SET estado = 'rechazado', fecha_revision = ?, revisado_por = ? WHERE id_cambio = ? AND estado = 'pendiente'");
+                stmt.setString(1, fecha);
+                stmt.setString(2, emailAdmin);
+                stmt.setInt(3, idCambio);
+                int rows = stmt.executeUpdate();
+                if (rows > 0) {
+                    ctx.json(Map.of("mensaje", "Cambio rechazado"));
+                } else {
+                    ctx.status(404).json(Map.of("error", "Cambio pendiente no encontrado"));
+                }
+            } catch (SQLException e) {
+                ctx.status(500).json(Map.of("error", e.getMessage()));
             }
         });
 

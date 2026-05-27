@@ -11,9 +11,13 @@ Asignar funciones específicas a cada rol (Cliente, Asesor, Admin) y reflejarlas
 - [x] **Agendar cita para ver un inmueble** — Desde la tarjeta de detalle del inmueble, el cliente puede seleccionar fecha/hora y solicitar una visita. Queda registrada en `visitas` con estado `Pendiente`. Si el cliente no existe en la tabla `clientes`, se crea automáticamente al agendar. ✅ Implementado
 - [x] **Ver historial de sus visitas** — Sección "Mis Visitas" donde el cliente ve solo sus propias citas (pendientes/realizadas/canceladas). ✅ Implementado
 - [x] **Cancelar una cita** — El cliente puede cancelar una visita pendiente desde "Mis Visitas". Al cancelar, el horario queda disponible nuevamente para agendar. ✅ Implementado
-- [ ] **Agregar/quitar inmuebles de favoritos** — Botón ❤️ en cada tarjeta de inmueble. Persistir en la tabla `clientes` (campo `favoritos`).
-- [ ] **Ver solo su perfil** — El cliente puede editar su nombre, teléfono, email, presupuesto. No ve datos de otros clientes.
-- [ ] **No puede ver operaciones ni reportes** — Las secciones "Operaciones" y "Reportes" se ocultan del navbar.
+- [x] **Agregar/quitar inmuebles de favoritos** — Botón ❤️ en cada tarjeta de inmueble. Persistir en la tabla `favoritos`. ✅ Implementado
+- [x] **Ver solo su perfil** — El cliente puede editar su nombre, teléfono, email, presupuesto. No ve datos de otros clientes. ✅ Implementado
+- [x] **No puede ver operaciones ni reportes** — Las secciones "Operaciones" y "Reportes" se ocultan del navbar. ✅ Implementado
+- [x] **Subir foto de perfil** — En "Mi Perfil", el cliente puede subir una imagen que se guarda como base64 en la BD y se muestra como avatar. ✅ Implementado
+- [x] **Edición de datos con aprobación de admin** — Todos los datos del cliente (nombre, teléfono, email, dirección) son editables, pero los cambios quedan pendientes de aprobación por un administrador. ✅ Implementado
+- [x] **Intereses sin aprobación** — El campo "intereses" se actualiza al instante sin necesidad de aprobación de administrador. ✅ Implementado
+- [x] **Botón "Guardar cambios" → "Volver"** — Al guardar cambios exitosamente, el botón cambia a "Volver a inmuebles" (o "Volver a página principal"). Al salir y volver a entrar a "Mi Perfil", el botón vuelve a mostrar "Guardar cambios". ✅ Implementado
 
 ### 2. Asesor (rol `asesor`)
 - [ ] **CRUD completo de inmuebles** — Puede crear, editar y eliminar propiedades.

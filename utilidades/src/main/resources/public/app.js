@@ -23,6 +23,13 @@ function initApp() {
         if (btnNuevaOperacion) btnNuevaOperacion.style.display = 'none';
     }
 
+    const btnPendientes = document.getElementById('btn-nav-pendientes');
+    if (rol === 'admin') {
+        if (btnPendientes) btnPendientes.style.display = 'inline-block';
+    } else {
+        if (btnPendientes) btnPendientes.style.display = 'none';
+    }
+
     if (usuario.email) {
         cargarFavoritos();
     }
@@ -34,7 +41,7 @@ document.addEventListener("DOMContentLoaded", initApp);
 // ---- NAVEGACIÓN ENTRE SECCIONES ----
 
 function mostrarSeccion(seccion) {
-    const secciones = ['inmuebles', 'clientes', 'operaciones', 'reportes'];
+    const secciones = ['inmuebles', 'clientes', 'operaciones', 'reportes', 'pendientes'];
     secciones.forEach(s => {
         document.getElementById('seccion-' + s).style.display = s === seccion ? 'block' : 'none';
         document.getElementById('buscador-' + s).style.display = s === seccion ? 'block' : 'none';
@@ -48,6 +55,7 @@ function mostrarSeccion(seccion) {
     if (seccion === 'clientes') cargarClientes();
     if (seccion === 'operaciones') cargarOperaciones();
     if (seccion === 'reportes') cargarReportes();
+    if (seccion === 'pendientes') cargarPendientes();
 }
 
 // ---- INMUEBLES ----
@@ -976,4 +984,143 @@ function mostrarExito(mensaje) {
     `;
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 3000);
+}
+
+// ---- APROBACIONES (ADMIN) ----
+
+function cargarPendientes() {
+    const contenedor = document.getElementById('contenedor-pendientes');
+    contenedor.innerHTML = '<div class="text-center text-muted"><p>Cargando cambios pendientes...</p></div>';
+
+    fetch('/api/admin/cambios-pendientes')
+        .then(res => {
+            if (!res.ok) throw new Error('Error del servidor');
+            return res.json();
+        })
+        .then(cambios => {
+            if (cambios.length === 0) {
+                contenedor.innerHTML = `
+                    <div class="alert alert-success text-center rounded-4 shadow-sm">
+                        <h5>✅ No hay cambios pendientes de aprobación</h5>
+                    </div>
+                `;
+                return;
+            }
+
+            // Agrupar por usuario
+            const grupos = {};
+            cambios.forEach(c => {
+                if (!grupos[c.email]) grupos[c.email] = {nombre: c.nombreUsuario, email: c.email, cambios: []};
+                grupos[c.email].cambios.push(c);
+            });
+
+            let html = '';
+            Object.values(grupos).forEach(grupo => {
+                html += `
+                    <div class="card card-proptech shadow-sm mb-4">
+                        <div class="card-header-gradient text-white py-3 px-4">
+                            <h5 class="mb-0 fw-bold">👤 ${grupo.nombre}</h5>
+                            <small>${grupo.email}</small>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Campo</th>
+                                            <th>Valor Actual</th>
+                                            <th>Valor Nuevo</th>
+                                            <th>Fecha</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                `;
+                grupo.cambios.forEach(c => {
+                    const campoLabel = {nombre: 'Nombre', telefono: 'Teléfono', direccion: 'Dirección'}[c.campo] || c.campo;
+                    html += `
+                        <tr>
+                            <td><strong>${campoLabel}</strong></td>
+                            <td class="text-muted">${c.valorAnterior || '(vacío)'}</td>
+                            <td><span class="text-success fw-bold">${c.valorNuevo}</span></td>
+                            <td><small class="text-muted">${c.fechaSolicitud}</small></td>
+                            <td>
+                                <button class="btn btn-success btn-sm rounded-pill px-3 me-1" onclick="aprobarCambio(${c.id}, this)">
+                                    ✅ Aprobar
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="rechazarCambio(${c.id}, this)">
+                                    ❌ Rechazar
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            contenedor.innerHTML = html;
+        })
+        .catch(err => {
+            contenedor.innerHTML = `
+                <div class="alert alert-danger text-center rounded-4 shadow-sm">
+                    <h5>❌ Error al cargar cambios pendientes</h5>
+                    <p>${err.message}</p>
+                </div>
+            `;
+        });
+}
+
+function aprobarCambio(idCambio, btn) {
+    const admin = JSON.parse(localStorage.getItem('usuario') || '{}');
+    if (!admin.email) {
+        mostrarError('Debes iniciar sesión como administrador.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Aprobando...';
+
+    fetch(`/api/admin/cambios-pendientes/${idCambio}/aprobar?adminEmail=${encodeURIComponent(admin.email)}`, {
+        method: 'PUT'
+    })
+    .then(res => res.json())
+    .then(data => {
+        mostrarExito('✅ Cambio aprobado: ' + data.campo);
+        cargarPendientes();
+    })
+    .catch(err => {
+        mostrarError('Error al aprobar: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = '✅ Aprobar';
+    });
+}
+
+function rechazarCambio(idCambio, btn) {
+    const admin = JSON.parse(localStorage.getItem('usuario') || '{}');
+    if (!admin.email) {
+        mostrarError('Debes iniciar sesión como administrador.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Rechazando...';
+
+    fetch(`/api/admin/cambios-pendientes/${idCambio}/rechazar?adminEmail=${encodeURIComponent(admin.email)}`, {
+        method: 'PUT'
+    })
+    .then(res => res.json())
+    .then(data => {
+        mostrarExito('🗑 Cambio rechazado');
+        cargarPendientes();
+    })
+    .catch(err => {
+        mostrarError('Error al rechazar: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = '❌ Rechazar';
+    });
 }
