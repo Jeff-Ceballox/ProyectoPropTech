@@ -9,34 +9,31 @@ function initApp() {
         if (navNombre) navNombre.textContent = usuario.nombre.split(' ')[0];
     }
 
-    // Ocultar secciones según rol
     const rol = (usuario.rol || 'cliente').toLowerCase();
-    const btnOperaciones = document.getElementById('btn-nav-operaciones');
-    const btnReportes = document.getElementById('btn-nav-reportes');
-    const btnRegistrarCliente = document.getElementById('btn-registrar-cliente');
-    const btnNuevaOperacion = document.getElementById('btn-nueva-operacion');
 
-    if (rol === 'cliente') {
-        if (btnOperaciones) btnOperaciones.style.display = 'none';
-        if (btnReportes) btnReportes.style.display = 'none';
-        if (btnRegistrarCliente) btnRegistrarCliente.style.display = 'none';
-        if (btnNuevaOperacion) btnNuevaOperacion.style.display = 'none';
-    }
+    // Mostrar/ocultar secciones según rol
+    const visibilidad = {
+        'btn-nav-operaciones': rol !== 'cliente',
+        'btn-nav-reportes': rol !== 'cliente',
+        'btn-nav-pendientes': rol === 'admin',
+        'btn-nav-admin': rol === 'admin',
+        'btn-registrar-cliente': rol !== 'cliente',
+        'btn-nueva-operacion': rol !== 'cliente',
+        'btn-agregar-inmueble': rol !== 'cliente'
+    };
+    Object.entries(visibilidad).forEach(([id, show]) => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = show ? 'inline-block' : 'none';
+    });
 
-    const btnPendientes = document.getElementById('btn-nav-pendientes');
-    if (rol === 'admin') {
-        if (btnPendientes) btnPendientes.style.display = 'inline-block';
-    } else {
-        if (btnPendientes) btnPendientes.style.display = 'none';
-    }
-
-    // Dropdown items según rol
     const miVisitasItem = document.getElementById('dropdown-mis-visitas');
     const misVisitasAsignadasItem = document.getElementById('dropdown-visitas-asignadas');
     const dashboardItem = document.getElementById('dropdown-dashboard');
+    const adminPanelItem = document.getElementById('dropdown-admin-panel');
     if (miVisitasItem) miVisitasItem.style.display = 'block';
     if (misVisitasAsignadasItem) misVisitasAsignadasItem.style.display = (rol === 'vendedor' || rol === 'admin') ? 'block' : 'none';
     if (dashboardItem) dashboardItem.style.display = (rol === 'vendedor' || rol === 'admin') ? 'block' : 'none';
+    if (adminPanelItem) adminPanelItem.style.display = rol === 'admin' ? 'block' : 'none';
 
     if (usuario.email) {
         cargarFavoritos();
@@ -49,7 +46,7 @@ document.addEventListener("DOMContentLoaded", initApp);
 // ---- NAVEGACIÓN ENTRE SECCIONES ----
 
 function mostrarSeccion(seccion, skipLoad) {
-    const secciones = ['inmuebles', 'clientes', 'operaciones', 'reportes', 'pendientes'];
+    const secciones = ['inmuebles', 'clientes', 'operaciones', 'reportes', 'pendientes', 'admin'];
     secciones.forEach(s => {
         const secEl = document.getElementById('seccion-' + s);
         if (secEl) secEl.style.display = s === seccion ? 'block' : 'none';
@@ -58,18 +55,17 @@ function mostrarSeccion(seccion, skipLoad) {
         const navEl = document.getElementById('btn-nav-' + s);
         if (navEl) navEl.classList.toggle('active', s === seccion);
     });
-    // Limpiar resultado de búsqueda al cambiar sección
     const resBusqueda = document.getElementById('resultado-busqueda');
     if (resBusqueda) resBusqueda.innerHTML = '';
 
     if (skipLoad) return;
 
-    // Cargar datos según la sección
     if (seccion === 'inmuebles') cargarInmuebles();
     if (seccion === 'clientes') cargarClientes();
     if (seccion === 'operaciones') cargarOperaciones();
     if (seccion === 'reportes') cargarReportes();
     if (seccion === 'pendientes') cargarPendientes();
+    if (seccion === 'admin') mostrarAdminPanel();
 }
 
 // ---- INMUEBLES ----
@@ -240,9 +236,11 @@ function buscarInmueblePorCodigo() {
 }
 
 function verDetalleInmueble(codigo) {
-    fetch(`/api/inmuebles/${encodeURIComponent(codigo)}`)
-        .then(res => res.json())
-        .then(inmueble => {
+    Promise.all([
+        fetch(`/api/inmuebles/${encodeURIComponent(codigo)}`).then(r => r.json()),
+        fetch(`/api/inmuebles/${encodeURIComponent(codigo)}/imagenes`).then(r => r.json())
+    ])
+        .then(([inmueble, imagenes]) => {
             document.getElementById('detalle-inmueble-titulo').textContent =
                 `${inmueble.tipo} — ${inmueble.codigo}`;
 
@@ -252,7 +250,44 @@ function verDetalleInmueble(codigo) {
             if (inmueble.tieneParqueadero) extras.push(`🚗 Parqueadero incluido`);
             let descripcion = inmueble.descripcion || "Propiedad exclusiva y moderna.";
 
+            // Galería de imágenes
+            let galeriaHtml = '';
+            const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+            const rol = (usuario.rol || '').toLowerCase();
+            const puedeEditarImagenes = rol === 'admin' || rol === 'vendedor';
+
+            if (imagenes && imagenes.length > 0) {
+                let thumbsHtml = '';
+                imagenes.forEach((img, idx) => {
+                    thumbsHtml += `
+                        <div class="imagen-thumb" style="position:relative; display:inline-block;">
+                            <img src="${img.imagenBase64}" class="rounded-3 shadow-sm" style="width:80px; height:60px; object-fit:cover; cursor:pointer; border:2px solid transparent;"
+                                 onclick="document.getElementById('galeria-principal').src='${img.imagenBase64}'"
+                                 onmouseover="this.style.borderColor='var(--color-primario)'" onmouseout="this.style.borderColor='transparent'">
+                            ${puedeEditarImagenes ? `<button class="btn btn-sm btn-outline-danger position-absolute top-0 end-0" style="font-size:10px; padding:0 4px; line-height:1.2;" onclick="eliminarImagenInmueble('${codigo}', ${img.id})" title="Eliminar imagen">✕</button>` : ''}
+                        </div>
+                    `;
+                });
+                galeriaHtml = `
+                    <div class="text-center mb-3">
+                        <img id="galeria-principal" src="${imagenes[0].imagenBase64}" class="rounded-4 shadow-sm" style="max-width:100%; max-height:300px; object-fit:contain;">
+                    </div>
+                    <div class="text-center mb-3" style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+                        ${thumbsHtml}
+                    </div>
+                `;
+            } else {
+                galeriaHtml = `
+                    <div class="text-center py-4 text-muted">
+                        <div style="font-size:4rem; opacity:0.3;">🏠</div>
+                        <p class="mt-2">Este inmueble no tiene imágenes aún.</p>
+                    </div>
+                `;
+            }
+
             document.getElementById('detalle-inmueble-body').innerHTML = `
+                ${galeriaHtml}
+                <hr>
                 <div class="row">
                     <div class="col-md-6">
                         <h6 class="text-muted fw-bold mb-3">INFORMACIÓN GENERAL</h6>
@@ -308,6 +343,30 @@ function verDetalleInmueble(codigo) {
             new bootstrap.Modal(document.getElementById('modalDetalleInmueble')).show();
         })
         .catch(err => console.error('Error al cargar detalle:', err));
+}
+
+function abrirGestionImagenesDesdeEdicion() {
+    const codigo = document.getElementById('edit-inm-codigo').value;
+    if (codigo) {
+        bootstrap.Modal.getInstance(document.getElementById('modalEditarInmueble')).hide();
+        verDetalleInmueble(codigo);
+    } else {
+        mostrarError('No hay un inmueble cargado para editar');
+    }
+}
+
+function eliminarImagenInmueble(codigoInmueble, idImagen) {
+    if (!confirm('¿Eliminar esta imagen?')) return;
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    fetch(`/api/inmuebles/${encodeURIComponent(codigoInmueble)}/imagenes/${idImagen}?email=${encodeURIComponent(usuario.email || '')}`, {
+        method: 'DELETE'
+    })
+    .then(res => { if (!res.ok) throw new Error('Error al eliminar imagen'); return res.json(); })
+    .then(data => {
+        mostrarExito('🗑 Imagen eliminada');
+        verDetalleInmueble(codigoInmueble);
+    })
+    .catch(err => mostrarError('Error: ' + err.message));
 }
 
 // ---- AGENDAR VISITA ----
@@ -842,12 +901,49 @@ function abrirModalNuevoInmueble() {
     document.getElementById('nuevo-inm-banos').value = '';
     document.getElementById('nuevo-inm-parqueadero').checked = false;
     document.getElementById('nuevo-inm-descripcion').value = '';
+    document.getElementById('nuevo-inm-imagenes').value = '';
+    document.getElementById('preview-nuevo-inm-imagenes').innerHTML = '';
+    window.imagenesNuevoInmueble = [];
     new bootstrap.Modal(document.getElementById('modalNuevoInmueble')).show();
 }
 
+function previsualizarImagenesNuevo(input) {
+    window.imagenesNuevoInmueble = [];
+    const preview = document.getElementById('preview-nuevo-inm-imagenes');
+    preview.innerHTML = '';
+    const files = input.files;
+    if (!files || files.length === 0) return;
+    if (files.length > 10) {
+        mostrarError('Máximo 10 imágenes por inmueble');
+        input.value = '';
+        return;
+    }
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.size > 5 * 1024 * 1024) {
+            mostrarError(`La imagen "${file.name}" excede 5MB`);
+            continue;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            window.imagenesNuevoInmueble.push(e.target.result);
+            const thumb = document.createElement('div');
+            thumb.style.cssText = 'position:relative; display:inline-block; width:80px; height:60px;';
+            thumb.innerHTML = `
+                <img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">
+            `;
+            preview.appendChild(thumb);
+            document.getElementById('contador-imagenes-nuevo').textContent = `${window.imagenesNuevoInmueble.length}/10`;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
 function guardarNuevoInmueble() {
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    const codigo = document.getElementById('nuevo-inm-codigo').value.trim();
     const datos = {
-        codigo: document.getElementById('nuevo-inm-codigo').value.trim(),
+        codigo: codigo,
         tipo: document.getElementById('nuevo-inm-tipo').value.trim(),
         estado: document.getElementById('nuevo-inm-estado').value,
         direccion: document.getElementById('nuevo-inm-direccion').value.trim(),
@@ -864,18 +960,29 @@ function guardarNuevoInmueble() {
         return;
     }
 
-    fetch('/api/inmuebles', {
+    // Obtener imágenes de la previsualización
+    const imagenesInput = document.getElementById('nuevo-inm-imagenes');
+    const imagenes = window.imagenesNuevoInmueble || [];
+    if (imagenes.length > 0) {
+        datos.imagenes = imagenes;
+    }
+
+    const params = usuario.email ? `?email=${encodeURIComponent(usuario.email)}` : '';
+
+    fetch(`/api/inmuebles${params}`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(datos)
     })
     .then(res => {
-        if (!res.ok) throw new Error('Error al crear inmueble');
+        if (!res.ok) return res.json().then(err => { throw new Error(err.error || 'Error al crear inmueble'); });
         return res.json();
     })
     .then(data => {
         mostrarExito('✅ Inmueble creado: ' + data.codigo);
         bootstrap.Modal.getInstance(document.getElementById('modalNuevoInmueble')).hide();
+        window.imagenesNuevoInmueble = [];
+        document.getElementById('preview-nuevo-inm-imagenes').innerHTML = '';
         cargarInmuebles();
     })
     .catch(err => mostrarError('Error: ' + err.message));
@@ -1520,6 +1627,376 @@ function cargarPendientes() {
                 </div>
             `;
         });
+}
+
+// ---- ADMIN PANEL ----
+
+function mostrarAnomalias() {
+    const contenedor = document.getElementById('contenedor-admin');
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    const emailParam = usuario.email ? `?email=${encodeURIComponent(usuario.email)}` : '';
+
+    contenedor.innerHTML = '<div class="text-center text-muted"><div class="spinner-border text-primary mb-2"></div><p>Cargando anomalías...</p></div>';
+
+    Promise.all([
+        fetch(`/api/anomalias/visitas-sin-cierre${emailParam}`).then(r => r.json()),
+        fetch(`/api/anomalias/sobrecarga-asesores${emailParam}`).then(r => r.json()),
+        fetch(`/api/anomalias/cambios-precio${emailParam}`).then(r => r.json()),
+        fetch(`/api/anomalias/total${emailParam}`).then(r => r.json())
+    ])
+    .then(([visitasSinCierre, sobrecarga, cambiosPrecio, total]) => {
+        let html = `
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold">🚨 Panel de Anomalías</h4>
+                <span class="badge ${total.total > 0 ? 'bg-danger' : 'bg-success'} rounded-pill fs-6 px-3 py-2">
+                    ${total.total || 0} anomalías detectadas
+                </span>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card card-proptech shadow-sm h-100 ${visitasSinCierre.length > 0 ? 'border-danger' : ''}">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold">👁️ Visitas sin cierre</h5>
+                            <p class="display-6 fw-bold ${visitasSinCierre.length > 0 ? 'text-danger' : 'text-success'}">${visitasSinCierre.length}</p>
+                            ${visitasSinCierre.length > 0 ? `
+                                <ul class="list-unstyled small">
+                                    ${visitasSinCierre.slice(0, 5).map(v => `<li>🔸 ${v.inmueble || v.codigoInmueble} — ${v.fecha || ''}</li>`).join('')}
+                                    ${visitasSinCierre.length > 5 ? `<li class="text-muted">...y ${visitasSinCierre.length - 5} más</li>` : ''}
+                                </ul>
+                            ` : '<p class="text-success mb-0">✅ Sin anomalías</p>'}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card card-proptech shadow-sm h-100 ${sobrecarga.length > 0 ? 'border-danger' : ''}">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold">⚡ Sobrecarga de asesores</h5>
+                            <p class="display-6 fw-bold ${sobrecarga.length > 0 ? 'text-danger' : 'text-success'}">${sobrecarga.length}</p>
+                            ${sobrecarga.length > 0 ? `
+                                <ul class="list-unstyled small">
+                                    ${sobrecarga.slice(0, 5).map(a => `<li>🔸 ${a.asesor || a.nombre} — ${a.carga || a.visitas} visitas</li>`).join('')}
+                                </ul>
+                            ` : '<p class="text-success mb-0">✅ Sin anomalías</p>'}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card card-proptech shadow-sm h-100 ${cambiosPrecio.length > 0 ? 'border-danger' : ''}">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold">💰 Cambios de precio frecuentes</h5>
+                            <p class="display-6 fw-bold ${cambiosPrecio.length > 0 ? 'text-danger' : 'text-success'}">${cambiosPrecio.length}</p>
+                            ${cambiosPrecio.length > 0 ? `
+                                <ul class="list-unstyled small">
+                                    ${cambiosPrecio.slice(0, 5).map(c => `<li>🔸 ${c.inmueble || c.codigo} — ${c.cambios || ''} cambios</li>`).join('')}
+                                </ul>
+                            ` : '<p class="text-success mb-0">✅ Sin anomalías</p>'}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-secondary rounded-pill mt-4" onclick="mostrarAdminPanel()">← Volver al Panel</button>
+        `;
+        contenedor.innerHTML = html;
+    })
+    .catch(err => {
+        contenedor.innerHTML = `<div class="alert alert-danger">Error al cargar anomalías: ${err.message}</div>`;
+    });
+}
+
+function mostrarAdminPanel() {
+    const contenedor = document.getElementById('contenedor-admin');
+    contenedor.innerHTML = `
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card card-proptech shadow-sm h-100">
+                    <div class="card-header-gradient text-white py-3 px-4">
+                        <h5 class="mb-0 fw-bold">👥 Gestión de Asesores</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="text-muted">Crear, editar y eliminar asesores inmobiliarios.</p>
+                        <button class="btn btn-nav active rounded-pill fw-bold px-4" onclick="mostrarAdminAsesores()">
+                            Administrar Asesores →
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card card-proptech shadow-sm h-100">
+                    <div class="card-header-gradient text-white py-3 px-4">
+                        <h5 class="mb-0 fw-bold">👤 Gestión de Usuarios</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="text-muted">Ver usuarios registrados y cambiar sus roles.</p>
+                        <button class="btn btn-nav active rounded-pill fw-bold px-4" onclick="mostrarAdminUsuarios()">
+                            Administrar Usuarios →
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card card-proptech shadow-sm h-100">
+                    <div class="card-header-gradient text-white py-3 px-4">
+                        <h5 class="mb-0 fw-bold">📊 Todos los Reportes</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="text-muted">Ver reportes completos del negocio sin filtros.</p>
+                        <button class="btn btn-nav active rounded-pill fw-bold px-4" onclick="mostrarSeccion('reportes')">
+                            Ir a Reportes →
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card card-proptech shadow-sm h-100">
+                    <div class="card-header-gradient text-white py-3 px-4">
+                        <h5 class="mb-0 fw-bold">⏳ Aprobaciones Pendientes</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="text-muted">Revisar y aprobar cambios solicitados por clientes.</p>
+                        <button class="btn btn-nav active rounded-pill fw-bold px-4" onclick="mostrarSeccion('pendientes')">
+                            Ir a Pendientes →
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card card-proptech shadow-sm h-100">
+                    <div class="card-header-gradient text-white py-3 px-4">
+                        <h5 class="mb-0 fw-bold">🚨 Panel de Anomalías</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="text-muted">Visitas sin cierre, sobrecarga de asesores, cambios de precio frecuentes.</p>
+                        <button class="btn btn-nav active rounded-pill fw-bold px-4" onclick="mostrarAnomalias()">
+                            Ver Anomalías →
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function mostrarAdminAsesores() {
+    const contenedor = document.getElementById('contenedor-admin');
+    contenedor.innerHTML = '<div class="text-center text-muted"><div class="spinner-border text-primary mb-2"></div><p>Cargando asesores...</p></div>';
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+
+    fetch('/api/asesores')
+        .then(res => res.json())
+        .then(asesores => {
+            let html = `
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold">👥 Gestión de Asesores</h4>
+                    <button class="btn btn-nav active rounded-pill fw-bold px-3" onclick="abrirModalNuevoAsesor()">
+                        ➕ Nuevo Asesor
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Especialidad</th>
+                                <th>Email</th>
+                                <th>Teléfono</th>
+                                <th>Calificación</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            if (asesores.length === 0) {
+                html += '<tr><td colspan="7" class="text-center text-muted">No hay asesores registrados</td></tr>';
+            } else {
+                asesores.forEach(a => {
+                    html += `
+                        <tr>
+                            <td><code>${a.idAsesor}</code></td>
+                            <td><strong>${a.nombre}</strong></td>
+                            <td>${a.especialidad || 'General'}</td>
+                            <td>${a.email || 'N/A'}</td>
+                            <td>${a.telefono || 'N/A'}</td>
+                            <td>${a.calificacion || 'N/A'}</td>
+                            <td>
+                                <button class="btn btn-sm btn-custom-outline rounded-pill px-2" onclick="editarAsesor('${a.idAsesor}')">✏️</button>
+                                <button class="btn btn-sm btn-outline-danger rounded-pill px-2" onclick="eliminarAsesor('${a.idAsesor}', '${a.nombre.replace(/'/g, "\\'")}')">🗑️</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            html += '</tbody></table></div>';
+            html += `<button class="btn btn-secondary rounded-pill mt-3" onclick="mostrarAdminPanel()">← Volver</button>`;
+            contenedor.innerHTML = html;
+        })
+        .catch(err => {
+            contenedor.innerHTML = `<div class="alert alert-danger">Error al cargar asesores: ${err.message}</div>`;
+        });
+}
+
+function abrirModalNuevoAsesor() {
+    document.getElementById('nuevo-asesor-id').value = 'ASESOR-' + Date.now();
+    document.getElementById('nuevo-asesor-nombre').value = '';
+    document.getElementById('nuevo-asesor-especialidad').value = '';
+    document.getElementById('nuevo-asesor-email').value = '';
+    document.getElementById('nuevo-asesor-telefono').value = '';
+    new bootstrap.Modal(document.getElementById('modalNuevoAsesor')).show();
+}
+
+function guardarNuevoAsesor() {
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    const datos = {
+        idAsesor: document.getElementById('nuevo-asesor-id').value.trim(),
+        nombre: document.getElementById('nuevo-asesor-nombre').value.trim(),
+        especialidad: document.getElementById('nuevo-asesor-especialidad').value.trim(),
+        email: document.getElementById('nuevo-asesor-email').value.trim(),
+        telefono: document.getElementById('nuevo-asesor-telefono').value.trim()
+    };
+    if (!datos.idAsesor || !datos.nombre) {
+        mostrarError('ID y nombre son obligatorios');
+        return;
+    }
+
+    fetch(`/api/admin/asesores?email=${encodeURIComponent(usuario.email || '')}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(datos)
+    })
+    .then(res => { if (!res.ok) return res.json().then(e => { throw new Error(e.error || 'Error'); }); return res.json(); })
+    .then(data => {
+        mostrarExito('✅ Asesor creado');
+        bootstrap.Modal.getInstance(document.getElementById('modalNuevoAsesor')).hide();
+        mostrarAdminAsesores();
+    })
+    .catch(err => mostrarError('Error: ' + err.message));
+}
+
+function editarAsesor(id) {
+    fetch(`/api/asesores`)
+        .then(res => res.json())
+        .then(asesores => {
+            const a = asesores.find(a => a.idAsesor === id);
+            if (!a) { mostrarError('Asesor no encontrado'); return; }
+            document.getElementById('edit-asesor-id').value = a.idAsesor;
+            document.getElementById('edit-asesor-nombre').value = a.nombre || '';
+            document.getElementById('edit-asesor-especialidad').value = a.especialidad || '';
+            document.getElementById('edit-asesor-email').value = a.email || '';
+            document.getElementById('edit-asesor-telefono').value = a.telefono || '';
+            new bootstrap.Modal(document.getElementById('modalEditarAsesor')).show();
+        })
+        .catch(err => mostrarError('Error: ' + err.message));
+}
+
+function guardarAsesorEditado() {
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    const id = document.getElementById('edit-asesor-id').value;
+    const datos = {
+        nombre: document.getElementById('edit-asesor-nombre').value.trim(),
+        especialidad: document.getElementById('edit-asesor-especialidad').value.trim(),
+        email: document.getElementById('edit-asesor-email').value.trim(),
+        telefono: document.getElementById('edit-asesor-telefono').value.trim()
+    };
+
+    fetch(`/api/admin/asesores/${encodeURIComponent(id)}?email=${encodeURIComponent(usuario.email || '')}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(datos)
+    })
+    .then(res => { if (!res.ok) return res.json().then(e => { throw new Error(e.error || 'Error'); }); return res.json(); })
+    .then(data => {
+        mostrarExito('✅ Asesor actualizado');
+        bootstrap.Modal.getInstance(document.getElementById('modalEditarAsesor')).hide();
+        mostrarAdminAsesores();
+    })
+    .catch(err => mostrarError('Error: ' + err.message));
+}
+
+function eliminarAsesor(id, nombre) {
+    if (!confirm(`¿Eliminar al asesor "${nombre}" (${id})?`)) return;
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+
+    fetch(`/api/admin/asesores/${encodeURIComponent(id)}?email=${encodeURIComponent(usuario.email || '')}`, {
+        method: 'DELETE'
+    })
+    .then(res => { if (!res.ok) throw new Error('Error al eliminar'); return res.json(); })
+    .then(data => { mostrarExito('🗑 Asesor eliminado'); mostrarAdminAsesores(); })
+    .catch(err => mostrarError('Error: ' + err.message));
+}
+
+function mostrarAdminUsuarios() {
+    const contenedor = document.getElementById('contenedor-admin');
+    contenedor.innerHTML = '<div class="text-center text-muted"><div class="spinner-border text-primary mb-2"></div><p>Cargando usuarios...</p></div>';
+
+    fetch('/api/usuarios')
+        .then(res => res.json())
+        .then(usuarios => {
+            let html = `
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold">👤 Gestión de Usuarios</h4>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Email</th>
+                                <th>Nombre</th>
+                                <th>Rol Actual</th>
+                                <th>Teléfono</th>
+                                <th>Activo</th>
+                                <th>Cambiar Rol</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            if (usuarios.length === 0) {
+                html += '<tr><td colspan="6" class="text-center text-muted">No hay usuarios registrados</td></tr>';
+            } else {
+                usuarios.forEach(u => {
+                    const rolActual = u.rol ? u.rol.nombre || u.rol : 'N/A';
+                    html += `
+                        <tr>
+                            <td><code>${u.email}</code></td>
+                            <td><strong>${u.nombre}</strong></td>
+                            <td><span class="badge ${rolActual === 'ADMIN' ? 'bg-danger' : rolActual === 'VENDEDOR' ? 'bg-warning text-dark' : 'bg-info text-dark'} rounded-pill">${rolActual}</span></td>
+                            <td>${u.telefono || 'N/A'}</td>
+                            <td>${u.activo !== false ? '✅' : '❌'}</td>
+                            <td>
+                                <select class="form-select form-select-sm rounded-pill" onchange="cambiarRolUsuario('${u.email}', this.value)" style="width:140px;">
+                                    <option value="CLIENTE" ${rolActual === 'CLIENTE' ? 'selected' : ''}>Cliente</option>
+                                    <option value="VENDEDOR" ${rolActual === 'VENDEDOR' ? 'selected' : ''}>Vendedor</option>
+                                    <option value="ADMIN" ${rolActual === 'ADMIN' ? 'selected' : ''}>Admin</option>
+                                    <option value="GERENTE" ${rolActual === 'GERENTE' ? 'selected' : ''}>Gerente</option>
+                                </select>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            html += '</tbody></table></div>';
+            html += `<button class="btn btn-secondary rounded-pill mt-3" onclick="mostrarAdminPanel()">← Volver</button>`;
+            contenedor.innerHTML = html;
+        })
+        .catch(err => {
+            contenedor.innerHTML = `<div class="alert alert-danger">Error al cargar usuarios: ${err.message}</div>`;
+        });
+}
+
+function cambiarRolUsuario(email, nuevoRol) {
+    const admin = JSON.parse(localStorage.getItem('usuario') || '{}');
+    if (!confirm(`¿Cambiar el rol de "${email}" a "${nuevoRol}"?`)) return;
+
+    fetch(`/api/admin/usuarios/${encodeURIComponent(email)}/rol?adminEmail=${encodeURIComponent(admin.email || '')}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({rol: nuevoRol})
+    })
+    .then(res => { if (!res.ok) throw new Error('Error al cambiar rol'); return res.json(); })
+    .then(data => {
+        mostrarExito('✅ Rol actualizado a ' + data.rol);
+        mostrarAdminUsuarios();
+    })
+    .catch(err => mostrarError('Error: ' + err.message));
 }
 
 function aprobarCambio(idCambio, btn) {

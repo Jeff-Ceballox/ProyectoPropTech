@@ -2,6 +2,7 @@ C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\dao\ClienteDAO.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\dao\ConexionDB.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\dao\FavoritoDAO.java
+C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\dao\ImagenInmuebleDAO.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\dao\InmuebleDAO.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\dao\OperacionDAO.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\dao\UsuarioDAO.java
@@ -10,6 +11,7 @@ C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\modelo\Alerta.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\modelo\Asesor.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\modelo\Cliente.java
+C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\modelo\ImagenInmueble.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\modelo\Inmueble.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\modelo\Operacion.java
 C:\UQ\Estructura de datos\ProyectoPropTech\utilidades\src\main\java\com\proptech\modelo\Rol.java

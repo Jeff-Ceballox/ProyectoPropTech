@@ -12,6 +12,7 @@ com\proptech\servicio\DetectorAnomaliesService.class
 com\proptech\utilidades\estructuras\TablaHash.class
 com\proptech\modelo\Asesor.class
 com\proptech\utilidades\HashUtils.class
+com\proptech\modelo\ImagenInmueble.class
 com\proptech\utilidades\estructuras\ArbolBinarioBusqueda.class
 com\proptech\modelo\Operacion.class
 com\proptech\servicio\RecomendacionService$InmuebleConPuntuacion.class
@@ -46,4 +47,5 @@ com\proptech\utilidades\estructuras\ListaEnlazada.class
 com\proptech\dao\FavoritoDAO.class
 com\proptech\servicio\RecomendacionService.class
 com\proptech\servicio\ReporteService.class
+com\proptech\dao\ImagenInmuebleDAO.class
 com\proptech\servicio\HistorialCambiosService.class

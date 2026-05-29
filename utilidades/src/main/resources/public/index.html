@@ -35,6 +35,9 @@
                 <button class="btn btn-nav rounded-pill fw-bold px-3" onclick="mostrarSeccion('pendientes')" id="btn-nav-pendientes" style="display:none;">
                     ⏳ Pendientes
                 </button>
+                <button class="btn btn-nav rounded-pill fw-bold px-3" onclick="mostrarSeccion('admin')" id="btn-nav-admin" style="display:none;">
+                    ⚙️ Admin
+                </button>
                 <div class="dropdown">
                     <button class="btn btn-nav dropdown-toggle d-flex align-items-center rounded-pill fw-bold px-3" type="button" id="dropdownPerfil" data-bs-toggle="dropdown">
                         <span id="nombre-usuario-nav">Perfil</span>
@@ -43,6 +46,7 @@
                         <li><a class="dropdown-item" href="#" onclick="mostrarMisVisitas()" id="dropdown-mis-visitas">📅 Mis Visitas</a></li>
                         <li><a class="dropdown-item" href="#" onclick="mostrarVisitasAsignadas()" id="dropdown-visitas-asignadas" style="display:none;">📋 Visitas Asignadas</a></li>
                         <li><a class="dropdown-item" href="#" onclick="mostrarDashboard()" id="dropdown-dashboard" style="display:none;">📊 Mi Dashboard</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="mostrarSeccion('admin')" id="dropdown-admin-panel" style="display:none;">⚙️ Panel Admin</a></li>
                         <li><a class="dropdown-item" href="perfil.html">👤 Mi Perfil</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="landing.html" onclick="localStorage.removeItem('usuario')">🚪 Cerrar sesión</a></li>
@@ -226,6 +230,21 @@
                 <div class="text-center text-muted">
                     <div class="spinner-border text-primary mb-2" role="status"></div>
                     <p>Cargando reportes...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN ADMIN -->
+        <div id="seccion-admin" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark"><span style="color: var(--color-primario);">Panel</span> de Administración</h2>
+                <button class="btn btn-secondary rounded-pill fw-bold px-3 shadow-sm" onclick="mostrarAdminPanel()">
+                    🔄 Actualizar
+                </button>
+            </div>
+            <div id="contenedor-admin">
+                <div class="text-center text-muted">
+                    <p>Cargando panel de administración...</p>
                 </div>
             </div>
         </div>
@@ -463,6 +482,12 @@
                             <label class="form-label fw-bold">Descripción</label>
                             <textarea class="form-control rounded-3" id="nuevo-inm-descripcion" rows="2" placeholder="Descripción de la propiedad..."></textarea>
                         </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Imágenes <small class="text-muted">(máx 10, 5MB c/u)</small></label>
+                            <input type="file" class="form-control rounded-pill" id="nuevo-inm-imagenes" multiple accept="image/*" onchange="previsualizarImagenesNuevo(this)">
+                            <div id="preview-nuevo-inm-imagenes" class="mt-2 d-flex gap-2 flex-wrap"></div>
+                            <small class="text-muted" id="contador-imagenes-nuevo">0/10</small>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">
@@ -534,6 +559,13 @@
                             <label class="form-label fw-bold">Descripción</label>
                             <textarea class="form-control rounded-3" id="edit-inm-descripcion" rows="2"></textarea>
                         </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Imágenes <small class="text-muted">(usa el detalle para gestionar imágenes)</small></label>
+                            <div id="edit-inm-imagenes-preview" class="d-flex gap-2 flex-wrap"></div>
+                            <button type="button" class="btn btn-sm btn-custom-outline rounded-pill mt-2" onclick="abrirGestionImagenesDesdeEdicion()">
+                                🖼️ Gestionar Imágenes
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0">
@@ -588,8 +620,87 @@
         </div>
     </div>
 
+    <!-- MODAL: Nuevo Asesor (Admin) -->
+    <div class="modal fade" id="modalNuevoAsesor" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0"
+                    style="background: linear-gradient(135deg, var(--color-secundario), var(--color-primario)); border-radius: 1rem 1rem 0 0;">
+                    <h5 class="modal-title text-white fw-bold">➕ Nuevo Asesor</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">ID Asesor</label>
+                        <input type="text" class="form-control rounded-pill" id="nuevo-asesor-id" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nombre</label>
+                        <input type="text" class="form-control rounded-pill" id="nuevo-asesor-nombre" placeholder="Nombre completo">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Especialidad</label>
+                        <input type="text" class="form-control rounded-pill" id="nuevo-asesor-especialidad" placeholder="Ej: Ventas Comerciales">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Email</label>
+                        <input type="email" class="form-control rounded-pill" id="nuevo-asesor-email" placeholder="asesor@email.com">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Teléfono</label>
+                        <input type="text" class="form-control rounded-pill" id="nuevo-asesor-telefono" placeholder="300-555-0000">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-nav active rounded-pill fw-bold px-4" onclick="guardarNuevoAsesor()">
+                        💾 Guardar Asesor
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Editar Asesor (Admin) -->
+    <div class="modal fade" id="modalEditarAsesor" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0"
+                    style="background: linear-gradient(135deg, var(--color-secundario), var(--color-primario)); border-radius: 1rem 1rem 0 0;">
+                    <h5 class="modal-title text-white fw-bold">✏️ Editar Asesor</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="edit-asesor-id">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nombre</label>
+                        <input type="text" class="form-control rounded-pill" id="edit-asesor-nombre">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Especialidad</label>
+                        <input type="text" class="form-control rounded-pill" id="edit-asesor-especialidad">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Email</label>
+                        <input type="email" class="form-control rounded-pill" id="edit-asesor-email">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Teléfono</label>
+                        <input type="text" class="form-control rounded-pill" id="edit-asesor-telefono">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-nav active rounded-pill fw-bold px-4" onclick="guardarAsesorEditado()">
+                        💾 Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="app.js?v=2"></script>
+    <script src="app.js?v=3"></script>
 
     <!-- Asesor IA Widget -->
     <div id="chat-widget" class="chat-widget">

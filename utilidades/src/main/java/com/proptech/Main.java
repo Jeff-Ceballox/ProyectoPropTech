@@ -23,7 +23,9 @@ import com.proptech.servicio.asesor.ChatRequest;
 import com.proptech.servicio.asesor.ChatResponse;
 import com.proptech.modelo.Usuario;
 import com.proptech.modelo.Visita;
+import com.proptech.modelo.ImagenInmueble;
 import com.proptech.dao.ClienteDAO;
+import com.proptech.dao.ImagenInmuebleDAO;
 import com.proptech.dao.InmuebleDAO;
 import com.proptech.dao.AsesorDAO;
 import com.proptech.dao.FavoritoDAO;
@@ -172,13 +174,48 @@ public class Main {
             }
         });
 
+        ImagenInmuebleDAO imagenDAO = new ImagenInmuebleDAO();
+
         // Registrar un nuevo inmueble (persiste en SQLite + indexa en estructuras)
         app.post("/api/inmuebles", ctx -> {
+            String email = ctx.queryParam("email");
+            if (!esAdminOVendedor(email)) {
+                ctx.status(403).json(Map.of("error", "Solo administradores y asesores pueden crear inmuebles."));
+                return;
+            }
+
             Inmueble nuevo = ctx.bodyAsClass(Inmueble.class);
             if (nuevo.getEstado() == null || nuevo.getEstado().isEmpty()) {
                 nuevo.setEstado("Disponible");
             }
             inventarioService.registrarInmueble(nuevo);
+
+            // Si se enviaron imágenes en el mismo POST, guardarlas
+            if (email != null) {
+                UsuarioDAO userDao = new UsuarioDAO();
+                Usuario user = userDao.buscarPorEmail(email);
+                if (user != null && user.getRol() != null) {
+                    String nombreRol = user.getRol().getNombre();
+                    if (Rol.ADMIN.equals(nombreRol) || Rol.VENDEDOR.equals(nombreRol)) {
+                        try {
+                            Map<String, Object> fullBody = ctx.bodyAsClass(Map.class);
+                            Object rawImagenes = fullBody.get("imagenes");
+                            if (rawImagenes instanceof java.util.List) {
+                                @SuppressWarnings("unchecked")
+                                java.util.List<String> imagenesBase64 = (java.util.List<String>) rawImagenes;
+                                String fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                                for (int i = 0; i < Math.min(imagenesBase64.size(), 10); i++) {
+                                    String b64 = imagenesBase64.get(i);
+                                    if (b64 != null && !b64.isEmpty()) {
+                                        imagenDAO.guardar(new ImagenInmueble(nuevo.getCodigo(), b64, i, fecha));
+                                    }
+                                }
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+
             ctx.status(201).json(nuevo);
         });
 
@@ -250,9 +287,14 @@ public class Main {
             ctx.json(datos);
         });
 
-        // Eliminar un inmueble
+        // Eliminar un inmueble (solo admin/asesor)
         app.delete("/api/inmuebles/{codigo}", ctx -> {
             String codigo = ctx.pathParam("codigo");
+            String email = ctx.queryParam("email");
+            if (!esAdminOVendedor(email)) {
+                ctx.status(403).json(Map.of("error", "Solo administradores y asesores pueden eliminar inmuebles."));
+                return;
+            }
             Inmueble existente = inventarioService.buscarPorCodigo(codigo);
             if (existente == null) {
                 ctx.status(404).json(Map.of("error", "Inmueble no encontrado: " + codigo));
@@ -260,6 +302,121 @@ public class Main {
             }
             inventarioService.eliminarInmueble(codigo);
             ctx.json(Map.of("mensaje", "Inmueble eliminado", "codigo", codigo));
+        });
+
+        // --- RUTAS API DE IMÁGENES DE INMUEBLES ---
+
+        // Subir una o varias imágenes a un inmueble
+        app.post("/api/inmuebles/{codigo}/imagenes", ctx -> {
+            String codigo = ctx.pathParam("codigo");
+            String email = ctx.queryParam("email");
+
+            // Verificar que el inmueble existe
+            Inmueble inm = inventarioService.buscarPorCodigo(codigo);
+            if (inm == null) {
+                ctx.status(404).json(Map.of("error", "Inmueble no encontrado: " + codigo));
+                return;
+            }
+
+            // Verificar rol (solo admin y vendedor)
+            boolean autorizado = false;
+            if (email != null) {
+                UsuarioDAO userDao = new UsuarioDAO();
+                Usuario user = userDao.buscarPorEmail(email);
+                if (user != null && user.getRol() != null) {
+                    String nombreRol = user.getRol().getNombre();
+                    if (Rol.ADMIN.equals(nombreRol) || Rol.VENDEDOR.equals(nombreRol)) {
+                        autorizado = true;
+                    }
+                }
+            }
+            if (!autorizado) {
+                ctx.status(403).json(Map.of("error", "Solo administradores y asesores pueden subir imágenes."));
+                return;
+            }
+
+            Map<String, Object> body = ctx.bodyAsClass(Map.class);
+            Object rawImagenes = body.get("imagenes");
+            if (rawImagenes == null || !(rawImagenes instanceof java.util.List)) {
+                ctx.status(400).json(Map.of("error", "Se requiere un campo 'imagenes' con un arreglo de strings en base64."));
+                return;
+            }
+
+            @SuppressWarnings("unchecked")
+            java.util.List<String> imagenesBase64 = (java.util.List<String>) rawImagenes;
+
+            // Validar máximo 10 imágenes
+            int actuales = imagenDAO.contarPorInmueble(codigo);
+            if (actuales + imagenesBase64.size() > 10) {
+                ctx.status(400).json(Map.of("error", "Máximo 10 imágenes por inmueble. Actuales: " + actuales));
+                return;
+            }
+
+            String fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            java.util.List<Map<String, Object>> guardadas = new java.util.ArrayList<>();
+            for (int i = 0; i < imagenesBase64.size(); i++) {
+                String b64 = imagenesBase64.get(i);
+                if (b64 == null || b64.isEmpty()) continue;
+                // Validar tamaño aprox (5MB = ~5,000,000 chars en base64)
+                if (b64.length() > 5_000_000) {
+                    ctx.status(400).json(Map.of("error", "Imagen " + (i+1) + " excede el límite de 5MB."));
+                    return;
+                }
+                ImagenInmueble img = new ImagenInmueble(codigo, b64, actuales + i, fecha);
+                imagenDAO.guardar(img);
+                Map<String, Object> item = new java.util.HashMap<>();
+                item.put("orden", actuales + i);
+                guardadas.add(item);
+            }
+
+            ctx.json(Map.of("mensaje", "Imágenes guardadas", "total", guardadas.size()));
+        });
+
+        // Obtener todas las imágenes de un inmueble
+        app.get("/api/inmuebles/{codigo}/imagenes", ctx -> {
+            String codigo = ctx.pathParam("codigo");
+            Inmueble inm = inventarioService.buscarPorCodigo(codigo);
+            if (inm == null) {
+                ctx.status(404).json(Map.of("error", "Inmueble no encontrado: " + codigo));
+                return;
+            }
+            ListaEnlazada<ImagenInmueble> imagenes = imagenDAO.obtenerPorInmueble(codigo);
+            List<Map<String, Object>> resultado = new ArrayList<>();
+            for (int i = 0; i < imagenes.getTamaño(); i++) {
+                ImagenInmueble img = imagenes.obtener(i);
+                Map<String, Object> item = new java.util.HashMap<>();
+                item.put("id", img.getId());
+                item.put("imagenBase64", img.getImagenBase64());
+                item.put("orden", img.getOrden());
+                resultado.add(item);
+            }
+            ctx.json(resultado);
+        });
+
+        // Eliminar una imagen específica
+        app.delete("/api/inmuebles/{codigo}/imagenes/{idImagen}", ctx -> {
+            String codigo = ctx.pathParam("codigo");
+            int idImagen = Integer.parseInt(ctx.pathParam("idImagen"));
+            String email = ctx.queryParam("email");
+
+            boolean autorizado = false;
+            if (email != null) {
+                UsuarioDAO userDao = new UsuarioDAO();
+                Usuario user = userDao.buscarPorEmail(email);
+                if (user != null && user.getRol() != null) {
+                    String nombreRol = user.getRol().getNombre();
+                    if (Rol.ADMIN.equals(nombreRol) || Rol.VENDEDOR.equals(nombreRol)) {
+                        autorizado = true;
+                    }
+                }
+            }
+            if (!autorizado) {
+                ctx.status(403).json(Map.of("error", "Solo administradores y asesores pueden eliminar imágenes."));
+                return;
+            }
+
+            imagenDAO.eliminar(idImagen);
+            ctx.json(Map.of("mensaje", "Imagen eliminada", "id", idImagen));
         });
 
         // Ruta de prueba para Alertas
@@ -298,6 +455,11 @@ public class Main {
 
         // Registrar un nuevo cliente (persiste en SQLite + indexa en TablaHash)
         app.post("/api/clientes", ctx -> {
+            String email = ctx.queryParam("email");
+            if (!esAdminOVendedor(email)) {
+                ctx.status(403).json(Map.of("error", "Solo administradores y asesores pueden registrar clientes."));
+                return;
+            }
             Cliente nuevo = ctx.bodyAsClass(Cliente.class);
             clientesService.registrarCliente(nuevo);
             ctx.status(201).json(nuevo);
@@ -313,6 +475,11 @@ public class Main {
 
         // Actualizar un cliente existente (para asesor/admin)
         app.put("/api/clientes/{id}", ctx -> {
+            String email = ctx.queryParam("email");
+            if (!esAdminOVendedor(email)) {
+                ctx.status(403).json(Map.of("error", "Solo administradores y asesores pueden modificar clientes."));
+                return;
+            }
             String id = ctx.pathParam("id");
             Cliente existente = clientesService.buscarPorIdentificacion(id);
             if (existente == null) {
@@ -327,6 +494,11 @@ public class Main {
 
         // Eliminar un cliente (para asesor/admin)
         app.delete("/api/clientes/{id}", ctx -> {
+            String email = ctx.queryParam("email");
+            if (!esAdminOVendedor(email)) {
+                ctx.status(403).json(Map.of("error", "Solo administradores y asesores pueden eliminar clientes."));
+                return;
+            }
             String id = ctx.pathParam("id");
             Cliente existente = clientesService.buscarPorIdentificacion(id);
             if (existente == null) {
@@ -658,6 +830,66 @@ public class Main {
             ctx.json(lista);
         });
 
+        // --- ADMIN: CRUD DE ASESORES ---
+
+        // Crear un nuevo asesor (solo admin)
+        app.post("/api/admin/asesores", ctx -> {
+            String email = ctx.queryParam("email");
+            if (!esAdmin(email)) {
+                ctx.status(403).json(Map.of("error", "Solo administradores pueden crear asesores."));
+                return;
+            }
+            Asesor nuevo = ctx.bodyAsClass(Asesor.class);
+            if (nuevo.getIdAsesor() == null || nuevo.getNombre() == null) {
+                ctx.status(400).json(Map.of("error", "idAsesor y nombre son requeridos"));
+                return;
+            }
+            AsesorDAO asesorDao = new AsesorDAO();
+            if (asesorDao.obtenerPorId(nuevo.getIdAsesor()) != null) {
+                ctx.status(409).json(Map.of("error", "Ya existe un asesor con ese ID"));
+                return;
+            }
+            asesorDao.guardar(nuevo);
+            ctx.status(201).json(nuevo);
+        });
+
+        // Actualizar un asesor (solo admin)
+        app.put("/api/admin/asesores/{id}", ctx -> {
+            String email = ctx.queryParam("email");
+            if (!esAdmin(email)) {
+                ctx.status(403).json(Map.of("error", "Solo administradores pueden modificar asesores."));
+                return;
+            }
+            String id = ctx.pathParam("id");
+            AsesorDAO asesorDao = new AsesorDAO();
+            Asesor existente = asesorDao.obtenerPorId(id);
+            if (existente == null) {
+                ctx.status(404).json(Map.of("error", "Asesor no encontrado: " + id));
+                return;
+            }
+            Asesor datos = ctx.bodyAsClass(Asesor.class);
+            datos.setIdAsesor(id);
+            asesorDao.actualizar(datos);
+            ctx.json(datos);
+        });
+
+        // Eliminar un asesor (solo admin)
+        app.delete("/api/admin/asesores/{id}", ctx -> {
+            String email = ctx.queryParam("email");
+            if (!esAdmin(email)) {
+                ctx.status(403).json(Map.of("error", "Solo administradores pueden eliminar asesores."));
+                return;
+            }
+            String id = ctx.pathParam("id");
+            AsesorDAO asesorDao = new AsesorDAO();
+            if (asesorDao.obtenerPorId(id) == null) {
+                ctx.status(404).json(Map.of("error", "Asesor no encontrado: " + id));
+                return;
+            }
+            asesorDao.eliminar(id);
+            ctx.json(Map.of("mensaje", "Asesor eliminado", "id", id));
+        });
+
         // Confirmar una visita (asesor confirma la cita)
         app.put("/api/visitas/{idVisita}/confirmar", ctx -> {
             String idVisita = ctx.pathParam("idVisita");
@@ -900,6 +1132,53 @@ public class Main {
             }
         });
         
+        // Obtener el rol del usuario autenticado
+        app.get("/api/usuario/rol", ctx -> {
+            String email = ctx.queryParam("email");
+            if (email == null) {
+                ctx.status(400).json(Map.of("error", "Email requerido"));
+                return;
+            }
+            Usuario usuario = authService.obtenerPerfil(email);
+            if (usuario != null && usuario.getRol() != null) {
+                ctx.json(Map.of("rol", usuario.getRol().getNombre(), "nombre", usuario.getNombre(), "email", usuario.getEmail()));
+            } else {
+                ctx.status(404).json(Map.of("error", "Usuario no encontrado"));
+            }
+        });
+
+        // --- ADMIN: GESTIÓN DE USUARIOS ---
+
+        // Cambiar el rol de un usuario (solo admin)
+        app.put("/api/admin/usuarios/{email}/rol", ctx -> {
+            String adminEmail = ctx.queryParam("adminEmail");
+            if (!esAdmin(adminEmail)) {
+                ctx.status(403).json(Map.of("error", "Solo administradores pueden cambiar roles."));
+                return;
+            }
+            String targetEmail = ctx.pathParam("email");
+            Map<String, String> body = ctx.bodyAsClass(Map.class);
+            String nuevoRol = body.get("rol");
+            if (nuevoRol == null) {
+                ctx.status(400).json(Map.of("error", "Campo 'rol' requerido"));
+                return;
+            }
+            UsuarioDAO userDao = new UsuarioDAO();
+            Usuario target = userDao.buscarPorEmail(targetEmail);
+            if (target == null) {
+                ctx.status(404).json(Map.of("error", "Usuario no encontrado"));
+                return;
+            }
+            Rol rol = userDao.obtenerRolPorNombre(nuevoRol);
+            if (rol == null) {
+                ctx.status(400).json(Map.of("error", "Rol inválido: " + nuevoRol));
+                return;
+            }
+            target.setRol(rol);
+            userDao.actualizar(target);
+            ctx.json(Map.of("mensaje", "Rol actualizado", "email", targetEmail, "rol", nuevoRol));
+        });
+
         // Obtener todos los usuarios (directo de BD)
         app.get("/api/usuarios", ctx -> {
             com.proptech.dao.UsuarioDAO usuarioDAO = new com.proptech.dao.UsuarioDAO();
@@ -1177,6 +1456,24 @@ public class Main {
         });
 
         System.out.println("Servidor corriendo en: http://localhost:7070");
+    }
+
+    private static boolean esAdmin(String email) {
+        if (email == null) return false;
+        UsuarioDAO userDao = new UsuarioDAO();
+        Usuario user = userDao.buscarPorEmail(email);
+        return user != null && user.getRol() != null && Rol.ADMIN.equals(user.getRol().getNombre());
+    }
+
+    private static boolean esAdminOVendedor(String email) {
+        if (email == null) return false;
+        UsuarioDAO userDao = new UsuarioDAO();
+        Usuario user = userDao.buscarPorEmail(email);
+        if (user != null && user.getRol() != null) {
+            String r = user.getRol().getNombre();
+            return Rol.ADMIN.equals(r) || Rol.VENDEDOR.equals(r);
+        }
+        return false;
     }
 
     private static boolean fechasConConflicto(String fecha1, String fecha2) {

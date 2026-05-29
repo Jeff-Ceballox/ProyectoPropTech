@@ -21,18 +21,33 @@ Asignar funciones específicas a cada rol (Cliente, Asesor, Admin) y reflejarlas
 
 ### 2. Asesor (rol `asesor`)
 - [x] **CRUD completo de inmuebles** — Puede crear, editar y eliminar propiedades. ✅ Implementado
+- [x] **Cargar imágenes a un inmueble** — Al crear o editar un inmueble, el asesor puede agregar una o varias imágenes. Se almacenan como base64 y se muestran en la galería del detalle del inmueble. ✅ Implementado
 - [x] **CRUD completo de clientes** — Puede registrar, modificar y eliminar clientes. ✅ Implementado
 - [x] **Gestionar visitas** — Ver todas las visitas asignadas a él, confirmar/realizar/cancelar. ✅ Implementado
 - [x] **Registrar operaciones** — Crear operaciones de Venta/Arriendo y asociarlas a un cliente e inmueble. ✅ Implementado
-- [x] **Ver reportes de rendimiento** — Accede a Reportes, pero solo ve los suyos propios (operaciones que él cerró, visitas que atendió). ✅ Implementado
+- [x] **Ver reportes de rendimiento** — Accede a Reportes, pero solo ve los suyos propios (operaciones que él cerró, visitas que atendió). ✅ Implementado (Dashboard personal vía `/api/asesor/dashboard`)
 - [x] **Dashboard personal** — Tarjeta con sus métricas: operaciones cerradas, visitas atendidas, calificación. ✅ Implementado
 
 ### 3. Admin (rol `admin`)
-- [ ] **Acceso total a todo el sistema** — CRUD de inmuebles, clientes, operaciones, visitas, asesores.
-- [ ] **Ver todos los reportes** — Sin filtro por asesor. Ve el negocio completo.
-- [ ] **Gestión de asesores** — Alta/baja/modificación de asesores.
-- [ ] **Gestión de usuarios** — Ver lista de usuarios registrados, cambiar roles.
-- [ ] **Panel de anomalías** — Detección de visitas sin cierre, sobrecarga de asesores, cambios de precio frecuentes.
+- [x] **Acceso total a todo el sistema** — CRUD de inmuebles, clientes, operaciones, visitas, asesores. ✅ Implementado
+- [x] **Cargar imágenes a un inmueble** — Ídem al asesor: puede agregar n imágenes a cualquier inmueble. ✅ Implementado
+- [x] **Ver todos los reportes** — Sin filtro por asesor. Ve el negocio completo. ✅ Implementado
+- [x] **Gestión de asesores** — Alta/baja/modificación de asesores. ✅ Implementado
+- [x] **Gestión de usuarios** — Ver lista de usuarios registrados, cambiar roles. ✅ Implementado
+- [x] **Panel de anomalías** — Detección de visitas sin cierre, sobrecarga de asesores, cambios de precio frecuentes. ✅ Implementado (endpoints listos, falta tarjeta en frontend admin)
+
+### 4. Inmuebles — Gestión de Imágenes
+- [x] **Agregar tabla `inmueble_imagenes` en SQLite** — Columnas: `id INTEGER PRIMARY KEY AUTOINCREMENT`, `codigo_inmueble TEXT NOT NULL`, `imagen_base64 TEXT NOT NULL`, `orden INTEGER DEFAULT 0`, `fecha_subida TEXT`, con FOREIGN KEY a `inmuebles(codigo)`. ✅ Implementado
+- [x] **Modelo `ImagenInmueble.java`** — Clase simple con id, codigoInmueble, imagenBase64, orden, fechaSubida. ✅ Implementado
+- [x] **DAO `ImagenInmuebleDAO.java`** — `guardar()`, `obtenerPorInmueble(codigo)`, `eliminar(id)`, `eliminarTodasPorInmueble(codigo)`. ✅ Implementado
+- [x] **Endpoint `POST /api/inmuebles/{codigo}/imagenes`** — Recibe un JSON con un arreglo de imágenes (base64) y las persiste en la BD. Solo accesible para asesor/admin. ✅ Implementado
+- [x] **Endpoint `GET /api/inmuebles/{codigo}/imagenes`** — Retorna todas las imágenes de un inmueble como arreglo de base64 (o URLs). Público (cualquier rol puede verlas). ✅ Implementado
+- [x] **Endpoint `DELETE /api/inmuebles/{codigo}/imagenes/{idImagen}`** — Elimina una imagen específica. Solo asesor/admin. ✅ Implementado
+- [x] **Carga en lote** — Al crear un inmueble vía `POST /api/inmuebles`, aceptar un campo opcional `imagenes: string[]` (base64) y persistirlas automáticamente en la tabla de imágenes. ✅ Implementado
+- [x] **Galería en frontend** — En el detalle del inmueble (modal/tarjeta), mostrar un carrusel o galería con las imágenes disponibles. Si no hay imágenes, mostrar un placeholder. ✅ Implementado
+- [x] **Subida múltiple en frontend** — En el formulario de crear/editar inmueble, agregar un selector de archivos múltiple (`<input type="file" multiple accept="image/*">`), convertir a base64 en el cliente y enviarlas junto con los datos del inmueble. ✅ Implementado
+- [x] **Previsualización** — Al seleccionar imágenes en el formulario, mostrar miniaturas de previsualización antes de enviar el formulario. ✅ Implementado
+- [x] **Límite de imágenes** — Definir un máximo configurable (ej: 10 imágenes por inmueble) y validarlo tanto en frontend como en backend. ✅ Implementado
 
 ---
 
@@ -41,12 +56,22 @@ Asignar funciones específicas a cada rol (Cliente, Asesor, Admin) y reflejarlas
 - [ ] Agregar middleware de autorización en las rutas de Javalin (verificar rol antes de cada endpoint).
 - [ ] Crear endpoint `GET /api/usuario/rol` para que el front sepa qué mostrar.
 - [ ] Mover la lógica de agendar visita a un endpoint con verificación de rol.
+- [ ] **Nuevo endpoint `POST /api/inmuebles/{codigo}/imagenes`** — Subir una o varias imágenes en base64 (body: `{ "imagenes": ["data:image/png;base64,...", ...] }`). Solo permitido para roles `admin` y `vendedor`. Validar máximo 10 imágenes y que el inmueble exista.
+- [ ] **Nuevo endpoint `GET /api/inmuebles/{codigo}/imagenes`** — Retorna arreglo de objetos `{ id, imagenBase64, orden }`. Accesible por cualquier rol autenticado.
+- [ ] **Nuevo endpoint `DELETE /api/inmuebles/{codigo}/imagenes/{idImagen}`** — Eliminar una imagen por ID. Solo `admin` y `vendedor`.
+- [ ] **Nuevo DAO `ImagenInmuebleDAO`** — CRUD contra tabla `inmueble_imagenes`.
+- [ ] **Validar tamaño de imagen** — Rechazar imágenes mayores a 5 MB antes de convertir a base64 y persistir.
 
 ## Próximos pasos técnicos (frontend)
 - [ ] Leer el rol del usuario desde `localStorage` al cargar la app.
 - [ ] Ocultar/mostrar secciones del navbar según el rol.
 - [ ] Mostrar botón "Agendar Visita" solo para clientes en el detalle del inmueble.
 - [ ] Mostar "Registrar Inmueble/Cliente/Operación" solo para asesores y admins.
+- [ ] **Subida múltiple de imágenes en formulario de inmueble** — En el formulario de crear/editar inmueble, agregar `<input type="file" multiple accept="image/*">` que convierta las fotos a base64 en el cliente y las envíe junto con el POST/PUT. Solo visible si el rol es `admin` o `vendedor`.
+- [ ] **Previsualización de imágenes** — Antes de enviar, mostrar miniaturas de las imágenes seleccionadas con botón "X" para quitar cada una.
+- [ ] **Galería de imágenes en detalle del inmueble** — En el modal de detalle, si el inmueble tiene imágenes, mostrar un carrusel simple con flechas anterior/siguiente o miniaturas clickeables. Si no tiene imágenes, mostrar placeholder genérico.
+- [ ] **Eliminar imágenes desde frontend** — Botón "Eliminar" en cada imagen de la galería, visible solo para admin/asesor, que llame al endpoint DELETE correspondiente.
+- [ ] **Límite visual de subida** — Mostrar contador "3/10 imágenes" en el formulario y deshabilitar el input al alcanzar el máximo.
 
 ---
 
