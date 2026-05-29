@@ -355,7 +355,13 @@ function verDetalleInmueble(codigo) {
                 }
             }
 
-            new bootstrap.Modal(document.getElementById('modalDetalleInmueble')).show();
+            const modalEl = document.getElementById('modalDetalleInmueble');
+            const existingModal = bootstrap.Modal.getInstance(modalEl);
+            if (existingModal && modalEl.classList.contains('show')) {
+                // Modal ya visible, solo actualizamos contenido
+            } else {
+                new bootstrap.Modal(modalEl).show();
+            }
         })
         .catch(err => console.error('Error al cargar detalle:', err));
 }
@@ -943,7 +949,8 @@ function guardarInmuebleEditado() {
 
 function eliminarInmueble(codigo) {
     if (!confirm(`¿Eliminar el inmueble ${codigo}? Esta acción no se puede deshacer.`)) return;
-    fetch(`/api/inmuebles/${encodeURIComponent(codigo)}`, { method: 'DELETE' })
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    fetch(`/api/inmuebles/${encodeURIComponent(codigo)}?email=${encodeURIComponent(usuario.email || '')}`, { method: 'DELETE' })
         .then(res => { if (!res.ok) throw new Error('Error al eliminar'); return res.json(); })
         .then(data => { mostrarExito('🗑 Inmueble eliminado'); cargarInmuebles(); })
         .catch(err => mostrarError('Error: ' + err.message));
