@@ -275,6 +275,14 @@ function verDetalleInmueble(codigo) {
                     <div class="text-center mb-3" style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
                         ${thumbsHtml}
                     </div>
+                    ${puedeEditarImagenes ? `
+                    <div class="text-center mt-2">
+                        <input type="file" id="upload-imagenes-detalle" multiple accept="image/*" style="display:none;" onchange="subirImagenesDesdeDetalle('${codigo}', this)">
+                        <button class="btn btn-sm btn-custom-outline rounded-pill fw-bold px-3" onclick="document.getElementById('upload-imagenes-detalle').click()">
+                            🖼️ Agregar imágenes
+                        </button>
+                    </div>
+                    ` : ''}
                 `;
             } else {
                 galeriaHtml = `
@@ -282,6 +290,14 @@ function verDetalleInmueble(codigo) {
                         <div style="font-size:4rem; opacity:0.3;">🏠</div>
                         <p class="mt-2">Este inmueble no tiene imágenes aún.</p>
                     </div>
+                    ${puedeEditarImagenes ? `
+                    <div class="text-center mt-2">
+                        <input type="file" id="upload-imagenes-detalle" multiple accept="image/*" style="display:none;" onchange="subirImagenesDesdeDetalle('${codigo}', this)">
+                        <button class="btn btn-sm btn-custom-outline rounded-pill fw-bold px-3" onclick="document.getElementById('upload-imagenes-detalle').click()">
+                            🖼️ Agregar imágenes
+                        </button>
+                    </div>
+                    ` : ''}
                 `;
             }
 
@@ -312,7 +328,6 @@ function verDetalleInmueble(codigo) {
                 <p class="text-muted">${descripcion}</p>
             `;
 
-            const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
             const footer = document.getElementById('detalle-inmueble-footer');
             if (footer) {
                 if (usuario.email) {
@@ -367,6 +382,50 @@ function eliminarImagenInmueble(codigoInmueble, idImagen) {
         verDetalleInmueble(codigoInmueble);
     })
     .catch(err => mostrarError('Error: ' + err.message));
+}
+
+function subirImagenesDesdeDetalle(codigoInmueble, input) {
+    const files = input.files;
+    if (!files || files.length === 0) return;
+    if (files.length > 10) {
+        mostrarError('Máximo 10 imágenes por inmueble');
+        input.value = '';
+        return;
+    }
+    const usuario = JSON.parse(localStorage.getItem('usuario') || '{}');
+    const imagenesBase64 = [];
+    let procesadas = 0;
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.size > 5 * 1024 * 1024) {
+            mostrarError(`La imagen "${file.name}" excede 5MB`);
+            continue;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            imagenesBase64.push(e.target.result);
+            procesadas++;
+            if (procesadas === files.length) {
+                fetch(`/api/inmuebles/${encodeURIComponent(codigoInmueble)}/imagenes?email=${encodeURIComponent(usuario.email || '')}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({imagenes: imagenesBase64})
+                })
+                .then(res => {
+                    if (!res.ok) return res.json().then(e => { throw new Error(e.error || 'Error al subir') });
+                    return res.json();
+                })
+                .then(data => {
+                    mostrarExito(`✅ ${data.total} imagen(es) subida(s)`);
+                    input.value = '';
+                    verDetalleInmueble(codigoInmueble);
+                })
+                .catch(err => mostrarError('Error: ' + err.message));
+            }
+        };
+        reader.readAsDataURL(file);
+    }
 }
 
 // ---- AGENDAR VISITA ----

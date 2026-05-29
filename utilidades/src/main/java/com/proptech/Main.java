@@ -184,34 +184,47 @@ public class Main {
                 return;
             }
 
-            Inmueble nuevo = ctx.bodyAsClass(Inmueble.class);
+            // Leer el body una sola vez como String y parsear manualmente
+            String rawBody = ctx.body();
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            Map<String, Object> bodyMap = mapper.readValue(rawBody, Map.class);
+
+            Inmueble nuevo = new Inmueble();
+            nuevo.setCodigo((String) bodyMap.getOrDefault("codigo", ""));
+            nuevo.setTipo((String) bodyMap.getOrDefault("tipo", ""));
+            nuevo.setDireccion((String) bodyMap.getOrDefault("direccion", ""));
+            nuevo.setPrecio(bodyMap.get("precio") instanceof Number ? ((Number) bodyMap.get("precio")).doubleValue() : 0);
+            nuevo.setArea(bodyMap.get("area") instanceof Number ? ((Number) bodyMap.get("area")).doubleValue() : 0);
+            nuevo.setEstado((String) bodyMap.getOrDefault("estado", "Disponible"));
+            nuevo.setHabitaciones(bodyMap.get("habitaciones") instanceof Number ? ((Number) bodyMap.get("habitaciones")).intValue() : 0);
+            nuevo.setBanos(bodyMap.get("banos") instanceof Number ? ((Number) bodyMap.get("banos")).intValue() : 0);
+            nuevo.setTieneParqueadero(Boolean.TRUE.equals(bodyMap.get("tieneParqueadero")));
+            nuevo.setDescripcion((String) bodyMap.getOrDefault("descripcion", ""));
             if (nuevo.getEstado() == null || nuevo.getEstado().isEmpty()) {
                 nuevo.setEstado("Disponible");
             }
             inventarioService.registrarInmueble(nuevo);
 
-            // Si se enviaron imágenes en el mismo POST, guardarlas
-            if (email != null) {
+            // Extraer imágenes del mismo body y guardarlas
+            Object rawImagenes = bodyMap.get("imagenes");
+            if (rawImagenes instanceof java.util.List && email != null) {
                 UsuarioDAO userDao = new UsuarioDAO();
                 Usuario user = userDao.buscarPorEmail(email);
-                if (user != null && user.getRol() != null) {
-                    String nombreRol = user.getRol().getNombre();
-                    if (Rol.ADMIN.equals(nombreRol) || Rol.VENDEDOR.equals(nombreRol)) {
-                        try {
-                            Map<String, Object> fullBody = ctx.bodyAsClass(Map.class);
-                            Object rawImagenes = fullBody.get("imagenes");
-                            if (rawImagenes instanceof java.util.List) {
-                                @SuppressWarnings("unchecked")
-                                java.util.List<String> imagenesBase64 = (java.util.List<String>) rawImagenes;
-                                String fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-                                for (int i = 0; i < Math.min(imagenesBase64.size(), 10); i++) {
-                                    String b64 = imagenesBase64.get(i);
-                                    if (b64 != null && !b64.isEmpty()) {
-                                        imagenDAO.guardar(new ImagenInmueble(nuevo.getCodigo(), b64, i, fecha));
-                                    }
-                                }
+                boolean puedeImagenes = user != null && user.getRol() != null &&
+                    (Rol.ADMIN.equals(user.getRol().getNombre()) || Rol.VENDEDOR.equals(user.getRol().getNombre()));
+                if (puedeImagenes) {
+                    @SuppressWarnings("unchecked")
+                    java.util.List<String> imagenesBase64 = (java.util.List<String>) rawImagenes;
+                    String fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                    for (int i = 0; i < Math.min(imagenesBase64.size(), 10); i++) {
+                        String b64 = imagenesBase64.get(i);
+                        if (b64 != null && !b64.isEmpty()) {
+                            try {
+                                imagenDAO.guardar(new ImagenInmueble(nuevo.getCodigo(), b64, i, fecha));
+                            } catch (Exception e) {
+                                System.err.println("Error al guardar imagen " + i + ": " + e.getMessage());
                             }
-                        } catch (Exception ignored) {}
+                        }
                     }
                 }
             }
